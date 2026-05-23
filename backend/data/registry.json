@@ -1,1 +1,50 @@
-{}
+{
+  "pact://trattoria-sf": {
+    "id": "pact://trattoria-sf",
+    "type": "business",
+    "name": "Trattoria SF",
+    "description": "A cozy Italian restaurant in the heart of San Francisco serving handmade pasta and wood-fired pizza.",
+    "capabilities": [
+      "dine-in reservations",
+      "private events",
+      "takeout"
+    ],
+    "ai_safe_schema": [
+      "date",
+      "party_size",
+      "dietary_needs",
+      "special_requests"
+    ],
+    "encrypted_schema": {
+      "fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "endpoint": "/secure/submit"
+    },
+    "products": [
+      {
+        "name": "Table Reservation",
+        "price": 0.0,
+        "description": "Reserve a table for dining"
+      },
+      {
+        "name": "Private Dining Experience",
+        "price": 150.0,
+        "description": "Exclusive private room"
+      },
+      {
+        "name": "Tasting Menu",
+        "price": 95.0,
+        "description": "Chef's seasonal tasting menu"
+      },
+      {
+        "name": "Wine Pairing",
+        "price": 45.0,
+        "description": "Sommelier-curated wine flight"
+      }
+    ],
+    "registered_at": "2026-05-23T12:28:29.884946"
+  }
+}

@@ -1,26 +1,49 @@
 import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import NavLinks from "../components/NavLinks";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Pact — Privacy-Preserving AI Agent Network",
-  description: "Your personal AI agent negotiates with businesses while keeping your data private.",
+  title: "Pact — Privacy-Preserving Agent Network",
+  description: "Personal AI agents negotiate with business agents while keeping your data private.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-neutral-950 text-neutral-100 min-h-screen antialiased">
-        <nav className="border-b border-neutral-800 px-6 py-3 flex items-center gap-4">
-          <span className="font-bold text-lg tracking-tight text-green-400">pact</span>
-          <span className="text-neutral-500 text-sm">privacy-preserving agent network</span>
-          <div className="ml-auto flex gap-4">
-            <a href="/" className="text-sm text-neutral-300 hover:text-white transition-colors">
-              My Agent
-            </a>
-            <a href="/business" className="text-sm text-neutral-300 hover:text-white transition-colors">
-              Business Onboarding
-            </a>
-          </div>
+    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
+      <body
+        style={{ fontFamily: "var(--font-sans, ui-sans-serif, system-ui, sans-serif)" }}
+        className="min-h-screen"
+      >
+        <nav
+          style={{
+            height: "44px",
+            borderBottom: "1px solid var(--border)",
+            backgroundColor: "var(--bg)",
+          }}
+          className="flex items-center px-5 gap-6"
+        >
+          <a
+            href="/"
+            style={{ color: "var(--text)", fontFamily: "var(--font-mono, monospace)" }}
+            className="text-sm font-medium flex items-center gap-1.5 select-none"
+          >
+            <span style={{ color: "var(--muted)" }}>◈</span> Pact
+          </a>
+          <div className="flex-1" />
+          <NavLinks />
         </nav>
         {children}
       </body>

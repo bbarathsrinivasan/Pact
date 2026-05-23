@@ -3,12 +3,51 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 10, 10, 10;
-  --background-end-rgb: 10, 10, 10;
+  --bg:              #0a0a0a;
+  --surface:         #111111;
+  --surface-2:       #161616;
+  --border:          #1f1f1f;
+  --border-2:        #2a2a2a;
+  --text:            #ededed;
+  --muted:           #737373;
+  --muted-2:         #525252;
+  --accent:          #ffffff;
+  --success:         #22c55e;
+  --success-bg:      #0a1a0a;
+  --success-border:  #166534;
+  --error:           #ef4444;
+  --amber:           #f59e0b;
+  --amber-bg:        #0c0a00;
+  --amber-border:    #78350f;
+  --blue:            #3b82f6;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+.pulse-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes flash-border {
+  0%   { border-color: #166534; }
+  50%  { border-color: #22c55e; }
+  100% { border-color: #1f1f1f; }
+}
+
+.flash-green {
+  animation: flash-border 1s ease-out forwards;
 }
