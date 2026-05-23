@@ -4,7 +4,7 @@ Real business website scraper.
 Flow:
   1. httpx async GET → raw HTML
   2. Strip tags/scripts → visible text (no extra deps, pure regex)
-  3. Feed text to Gemini 2.0 Flash for structured extraction
+  3. Feed text to Gemini 3.5 Flash for structured extraction
   4. Parse JSON response → business_data dict
   5. Fallback to hardcoded Trattoria SF on any error
 """
@@ -16,7 +16,7 @@ import re
 import httpx
 from google import genai
 
-from config import GEMINI_API_KEY, GEMINI_MODEL, SCRAPER_MODEL
+from config import GEMINI_API_KEY, SCRAPER_MODEL
 
 # ── Fallback ───────────────────────────────────────────────────────────────────
 
@@ -139,33 +139,32 @@ async def scrape_business(url: str) -> dict:
 
     prompt = _PROMPT_TMPL.format(content_section=content_section)
 
-    # ── Step 3: Call Antigravity scraper model, fall back to Gemini ───────────
+    # ── Step 3: Call Gemini 3.5 Flash for structured extraction ─────────────
     client = genai.Client(api_key=GEMINI_API_KEY)
 
-    for model, label in [(SCRAPER_MODEL, "antigravity"), (GEMINI_MODEL, "gemini-fallback")]:
-        try:
-            response = await client.aio.models.generate_content(
-                model=model,
-                contents=prompt,
-            )
-            raw = response.text.strip()
-            raw = re.sub(r"^```(?:json)?\s*", "", raw)
-            raw = re.sub(r"\s*```$", "", raw)
+    try:
+        response = await client.aio.models.generate_content(
+            model=SCRAPER_MODEL,
+            contents=prompt,
+        )
+        raw = response.text.strip()
+        raw = re.sub(r"^```(?:json)?\s*", "", raw)
+        raw = re.sub(r"\s*```$", "", raw)
 
-            match = re.search(r"\{[\s\S]*\}", raw)
-            data = json.loads(match.group() if match else raw)
+        match = re.search(r"\{[\s\S]*\}", raw)
+        data = json.loads(match.group() if match else raw)
 
-            if "business_name" not in data:
-                raise ValueError("Missing business_name in model response")
+        if "business_name" not in data:
+            raise ValueError("Missing business_name in model response")
 
-            data["_scrape_status"] = scrape_mode
-            data["_scrape_url"]    = url
-            data["_scrape_model"]  = label
-            print(f"[scraper] ✓ '{data['business_name']}' via {label}/{scrape_mode} from {url}")
-            return data
+        data["_scrape_status"] = scrape_mode
+        data["_scrape_url"]    = url
+        data["_scrape_model"]  = SCRAPER_MODEL
+        print(f"[scraper] ✓ '{data['business_name']}' via {SCRAPER_MODEL}/{scrape_mode} from {url}")
+        return data
 
-        except Exception as exc:
-            print(f"[scraper] {label} failed ({exc})" + ("; trying Gemini fallback" if label == "antigravity" else "; using hardcoded fallback"))
+    except Exception as exc:
+        print(f"[scraper] {SCRAPER_MODEL} failed ({exc}); using hardcoded fallback")
 
     result = dict(_FALLBACK)
     result["_scrape_status"] = "fallback"

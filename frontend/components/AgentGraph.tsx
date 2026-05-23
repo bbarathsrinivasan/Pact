@@ -184,7 +184,7 @@ export default function AgentGraph({
           AI TRUST BOUNDARY
         </text>
         <text x="278" y="234" fontSize="7.5" fill={C.boundary} fontFamily="monospace" opacity="0.55">
-          Gemini 2.5 Flash — never sees PII
+          Gemini 3.5 Flash — never sees PII
         </text>
 
         {/* ── AI-safe path ────────────────────────────────────────────── */}
@@ -243,7 +243,7 @@ export default function AgentGraph({
                 style={{ filter: `drop-shadow(0 0 12px ${C.gemini}99)` }} />
         <text x="374" y="140" textAnchor="middle" fontSize="18" fill={C.gemini}>⬡</text>
         <text x="374" y="154" textAnchor="middle" fontSize="7.5" fill={C.gemini} fontFamily="monospace">Gemini</text>
-        <text x="374" y="164" textAnchor="middle" fontSize="7" fill="#525252" fontFamily="monospace">2.5 Flash</text>
+        <text x="374" y="164" textAnchor="middle" fontSize="7" fill="#525252" fontFamily="monospace">3.5 Flash</text>
 
         {/* Business Agent */}
         <circle cx="726" cy="92" r="42" fill="url(#gBusiness)"

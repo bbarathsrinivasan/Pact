@@ -34,3 +34,30 @@ def find_agents_by_capability(capability: str) -> list[dict]:
         card for card in registry.values()
         if any(capability.lower() in cap.lower() for cap in card.get("capabilities", []))
     ]
+
+
+def _normalize_name(name: str) -> str:
+    return "".join(c for c in name.lower() if c.isalnum())
+
+
+def find_agent_by_name(name: str) -> dict | None:
+    """Fuzzy match a business name against registered agents."""
+    if not name or not name.strip():
+        return None
+    needle = _normalize_name(name)
+    if not needle:
+        return None
+
+    best: dict | None = None
+    best_score = 0
+    for agent in load_registry().values():
+        aname = agent.get("name", "")
+        hay = _normalize_name(aname)
+        if not hay:
+            continue
+        if needle == hay or needle in hay or hay in needle:
+            score = len(hay) if needle in hay else len(needle)
+            if score > best_score:
+                best_score = score
+                best = agent
+    return best

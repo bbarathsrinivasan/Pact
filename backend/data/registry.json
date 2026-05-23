@@ -3,52 +3,28 @@
     "id": "pact://trattoria-sf",
     "type": "business",
     "name": "Trattoria SF",
-    "description": "A cozy Italian restaurant in the heart of San Francisco serving handmade pasta and wood-fired pizza since 1987.",
+    "description": "Italian restaurant",
     "capabilities": [
-      "dine-in reservations",
-      "private events",
-      "takeout",
-      "catering"
+      "accept reservations"
     ],
-    "privacy_note": "",
     "ai_safe_schema": [
       "date",
-      "time",
       "party_size",
-      "dietary_needs",
-      "special_requests"
+      "dietary_needs"
     ],
     "encrypted_schema": {
       "fields": [
         "full_name",
-        "email",
-        "phone"
+        "email"
       ],
-      "endpoint": "/secure/submit"
+      "endpoint": "/secure/submit/trattoria-sf"
     },
     "products": [
       {
         "name": "Table Reservation",
-        "price": 0.0,
-        "description": "Reserve your table \u2014 no fee"
-      },
-      {
-        "name": "Chef's Tasting Menu",
-        "price": 95.0,
-        "description": "6-course seasonal tasting menu"
-      },
-      {
-        "name": "Private Dining Experience",
-        "price": 150.0,
-        "description": "Exclusive private room, min 8 guests"
-      },
-      {
-        "name": "Wine Pairing",
-        "price": 45.0,
-        "description": "Sommelier-curated 4-glass flight"
+        "price": 0.0
       }
-    ],
-    "registered_at": "2026-05-23T13:36:02.796643"
+    ]
   },
   "pact://pact-demo-store": {
     "id": "pact://pact-demo-store",
@@ -101,5 +77,129 @@
       }
     ],
     "registered_at": "2026-05-01T00:00:00"
+  },
+  "pact://example-domain-consulting": {
+    "id": "pact://example-domain-consulting",
+    "type": "business",
+    "name": "Example Domain Consulting",
+    "description": "Example Domain Consulting is a digital solutions agency that designs clean, effective developer-facing resources and system sandboxes. They specialize in building high-quality documentation, mock environments, and developer experience workshops to optimize your integration workflows.",
+    "capabilities": [
+      "audit developer documentation",
+      "configure mock environments",
+      "facilitate developer experience workshops",
+      "design sandbox scenarios"
+    ],
+    "privacy_note": "Your personal details, including full name, email, and phone, are completely encrypted and hidden from the AI, which only accesses date, time, and special requests to fulfill your inquiry.",
+    "ai_safe_schema": [
+      "date",
+      "time",
+      "special_requests"
+    ],
+    "encrypted_schema": {
+      "fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "endpoint": "/secure/submit/example-domain-consulting",
+      "method": "POST",
+      "encryption": "AES-256-Fernet"
+    },
+    "products": [
+      {
+        "name": "Documentation Review & Audit",
+        "price": 250.0,
+        "description": "An in-depth review of your technical examples and documentation clarity."
+      },
+      {
+        "name": "Mock Environment Setup",
+        "price": 750.0,
+        "description": "Custom sandbox and mock API endpoints tailored for operations testing."
+      },
+      {
+        "name": "Developer Experience Workshop",
+        "price": 1200.0,
+        "description": "A half-day virtual team training session on documentation best practices."
+      }
+    ],
+    "registered_at": "2026-05-23T13:45:01.076377"
+  },
+  "pact://shack15": {
+    "id": "pact://shack15",
+    "name": "SHACK15",
+    "description": "Social club",
+    "capabilities": [
+      "accept reservations"
+    ],
+    "ai_safe_schema": [
+      "date",
+      "time",
+      "party_size"
+    ],
+    "encrypted_schema": {
+      "fields": [
+        "full_name",
+        "email"
+      ],
+      "endpoint": "/secure/submit/shack15"
+    },
+    "products": [
+      {
+        "name": "Reservation",
+        "price": 0.0
+      }
+    ]
+  },
+  "pact://the-corner-store-boutique": {
+    "id": "pact://the-corner-store-boutique",
+    "type": "business",
+    "name": "The Corner Store Boutique",
+    "description": "The Corner Store Boutique is a charming neighborhood shop offering curated artisanal goods, unique local gifts, and personalized shopping experiences in a warm, welcoming atmosphere.",
+    "capabilities": [
+      "schedule personal shopping sessions",
+      "book private group shopping events",
+      "request custom gift box curations",
+      "reserve seasonal workshop tickets"
+    ],
+    "privacy_note": "Personal details like your full name, email, and phone number are entirely encrypted and bypassed, while AI-safe booking details such as date, time, party size, and special requests are processed to assist you.",
+    "ai_safe_schema": [
+      "date",
+      "time",
+      "party_size",
+      "special_requests"
+    ],
+    "encrypted_schema": {
+      "fields": [
+        "full_name",
+        "email",
+        "phone"
+      ],
+      "endpoint": "/secure/submit/the-corner-store-boutique",
+      "method": "POST",
+      "encryption": "AES-256-Fernet"
+    },
+    "products": [
+      {
+        "name": "1-on-1 Personal Shopping Session",
+        "price": 45.0,
+        "description": "A dedicated 60-minute styling and shopping consultation with our lead curator."
+      },
+      {
+        "name": "Private After-Hours Group Shopping",
+        "price": 120.0,
+        "description": "Exclusive access to the store for up to 6 guests with complimentary refreshments."
+      },
+      {
+        "name": "Custom Gift Box Curation",
+        "price": 15.0,
+        "description": "Let us curate and beautifully wrap a custom selection of products for your recipient."
+      },
+      {
+        "name": "Seasonal Workshop Ticket",
+        "price": 55.0,
+        "description": "Admission to our monthly hands-on crafting or local maker workshop."
+      }
+    ],
+    "registered_at": "2026-05-23T13:55:09.844234"
   }
 }

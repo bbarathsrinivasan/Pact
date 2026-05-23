@@ -4,5 +4,32 @@
     "pii": {
       "full_name": "Alex"
     }
+  },
+  "PACT-9P71HQ": {
+    "business_slug": "shack15",
+    "session_token": "s-yj9mo2xo",
+    "encrypted_payload": "gAAAAABqEhLESWKsgInM8flvqdZvSVDGCeDN4BdZWfV2GUbkMjCTdE_fl6O-bH69pfIGzcNx7uFYC4f-08M3UDmpve-mSRiht5zLH2nMCuSgP1DKAwzSYyM=",
+    "received_at": "2026-05-23T13:49:08.048531",
+    "pii_decrypted": {
+      "full_name": "Alex"
+    }
+  },
+  "PACT-Q1YJV7": {
+    "business_slug": "default",
+    "session_token": "s-yj9mo2xo",
+    "encrypted_payload": "gAAAAABqEhOFvvn1b3e72AgMGim4SdBqGnjVxR3iHfNvQqDHMLw3miy6T8pA09g20m_kZrFmKxVx6YB9Wxp5dEhMqlvK4ZV71berz19-L-SBTfKmq_psnrY=",
+    "received_at": "2026-05-23T13:52:21.726704",
+    "pii_decrypted": {
+      "full_name": "Alex"
+    }
+  },
+  "PACT-7FHJMD": {
+    "business_slug": "shack15",
+    "session_token": "test-memory-session",
+    "encrypted_payload": "gAAAAABqEhQg3f33f4Ggjk2TbTiCYuMjChmDurwF7m11FwKUmwlMmZV3Y64cWBfiLrHZXRtgbhcqkJGTVWarU0rvtAvmXFvPwbQgqlJhGww9Z7DoQFDYERU=",
+    "received_at": "2026-05-23T13:54:56.963715",
+    "pii_decrypted": {
+      "full_name": "Alex"
+    }
   }
 }
