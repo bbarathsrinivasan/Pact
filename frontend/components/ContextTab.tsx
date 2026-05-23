@@ -58,7 +58,7 @@ function Input({
           display: "block",
           fontFamily: "monospace",
           fontSize: "10px",
-          color: "#525252",
+          color: "#8a8a8a",
           textTransform: "uppercase",
           letterSpacing: "1px",
           marginBottom: "5px",
@@ -156,7 +156,7 @@ export default function ContextTab() {
           style={{
             fontFamily: "monospace",
             fontSize: "9px",
-            color: "#525252",
+            color: "#8a8a8a",
             textTransform: "uppercase",
             letterSpacing: "2px",
             marginBottom: "6px",
@@ -164,7 +164,7 @@ export default function ContextTab() {
         >
           Your Profile
         </p>
-        <p style={{ fontSize: "11px", color: "#525252", lineHeight: 1.5 }}>
+        <p style={{ fontSize: "11px", color: "#8a8a8a", lineHeight: 1.5 }}>
           Stored locally. Never sent to AI — only your agent reads this.
         </p>
       </div>
@@ -212,7 +212,7 @@ export default function ContextTab() {
           style={{
             fontFamily: "monospace",
             fontSize: "9px",
-            color: "#525252",
+            color: "#8a8a8a",
             textTransform: "uppercase",
             letterSpacing: "2px",
           }}
@@ -227,7 +227,7 @@ export default function ContextTab() {
             cursor: "pointer",
             fontFamily: "monospace",
             fontSize: "10px",
-            color: "#525252",
+            color: "#8a8a8a",
             padding: 0,
           }}
         >
@@ -248,7 +248,7 @@ export default function ContextTab() {
             background: "#0a0a0a",
             border: "1px solid #1f1f1f",
             borderRadius: "4px",
-            color: "#737373",
+            color: "#9a9a9a",
             fontFamily: "monospace",
             fontSize: "11px",
             padding: "10px",

@@ -50,15 +50,15 @@ function ActivityButton({
           ? "2px solid #22c55e"
           : "2px solid transparent",
         cursor: "pointer",
-        color: active ? "#ededed" : "#525252",
+        color: active ? "#ededed" : "#8a8a8a",
         transition: "color 0.15s, border-color 0.15s",
         flexShrink: 0,
       }}
       onMouseEnter={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "#737373";
+        if (!active) (e.currentTarget as HTMLElement).style.color = "#9a9a9a";
       }}
       onMouseLeave={(e) => {
-        if (!active) (e.currentTarget as HTMLElement).style.color = "#525252";
+        if (!active) (e.currentTarget as HTMLElement).style.color = "#8a8a8a";
       }}
     >
       <span style={{ fontSize: "16px", lineHeight: 1 }}>{tab.icon}</span>
@@ -171,7 +171,7 @@ export default function Home() {
               style={{
                 fontFamily: "monospace",
                 fontSize: "9px",
-                color: "#525252",
+                color: "#8a8a8a",
                 textTransform: "uppercase",
                 letterSpacing: "2px",
               }}
@@ -183,7 +183,7 @@ export default function Home() {
               style={{
                 background: "none",
                 border: "none",
-                color: "#525252",
+                color: "#8a8a8a",
                 cursor: "pointer",
                 fontFamily: "monospace",
                 fontSize: "14px",
@@ -191,10 +191,10 @@ export default function Home() {
                 padding: "0 2px",
               }}
               onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLElement).style.color = "#737373")
+                ((e.currentTarget as HTMLElement).style.color = "#9a9a9a")
               }
               onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLElement).style.color = "#525252")
+                ((e.currentTarget as HTMLElement).style.color = "#8a8a8a")
               }
             >
               ✕

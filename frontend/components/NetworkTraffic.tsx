@@ -145,13 +145,13 @@ export default function NetworkTraffic({ agentId }: NetworkTrafficProps) {
       >
         <span
           className="text-xs uppercase tracking-widest font-medium"
-          style={{ color: "#737373" }}
+          style={{ color: "#9a9a9a" }}
         >
           Network Traffic
         </span>
         <span
           className="text-xs"
-          style={{ color: "#525252", fontFamily: "monospace" }}
+          style={{ color: "#8a8a8a", fontFamily: "monospace" }}
         >
           last {(WINDOW * TICK_MS) / 1000}s · 3s resolution
         </span>
@@ -178,7 +178,7 @@ export default function NetworkTraffic({ agentId }: NetworkTrafficProps) {
             style={{
               fontFamily: "monospace",
               fontSize: "9px",
-              color: "#525252",
+              color: "#8a8a8a",
               marginBottom: "3px",
               textTransform: "uppercase",
               letterSpacing: "1px",
@@ -189,7 +189,7 @@ export default function NetworkTraffic({ agentId }: NetworkTrafficProps) {
           <p style={{ fontFamily: "monospace", fontSize: "22px", color: AI_SAFE_COLOR, lineHeight: 1 }}>
             {totals.ai}
           </p>
-          <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#525252", marginTop: "3px" }}>
+          <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#8a8a8a", marginTop: "3px" }}>
             +{lastAi} this tick
           </p>
         </div>
@@ -199,7 +199,7 @@ export default function NetworkTraffic({ agentId }: NetworkTrafficProps) {
             style={{
               fontFamily: "monospace",
               fontSize: "9px",
-              color: "#525252",
+              color: "#8a8a8a",
               marginBottom: "3px",
               textTransform: "uppercase",
               letterSpacing: "1px",
@@ -210,7 +210,7 @@ export default function NetworkTraffic({ agentId }: NetworkTrafficProps) {
           <p style={{ fontFamily: "monospace", fontSize: "22px", color: ENC_COLOR, lineHeight: 1 }}>
             {totals.enc}
           </p>
-          <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#525252", marginTop: "3px" }}>
+          <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#8a8a8a", marginTop: "3px" }}>
             +{lastEnc} this tick
           </p>
         </div>
@@ -309,11 +309,11 @@ export default function NetworkTraffic({ agentId }: NetworkTrafficProps) {
           flexShrink: 0,
         }}
       >
-        <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#525252", display: "flex", alignItems: "center", gap: "4px" }}>
+        <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#8a8a8a", display: "flex", alignItems: "center", gap: "4px" }}>
           <span style={{ width: "16px", height: "2px", background: AI_SAFE_COLOR, display: "inline-block", borderRadius: "1px" }} />
           AI-safe fields
         </span>
-        <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#525252", display: "flex", alignItems: "center", gap: "4px" }}>
+        <span style={{ fontFamily: "monospace", fontSize: "9px", color: "#8a8a8a", display: "flex", alignItems: "center", gap: "4px" }}>
           <span style={{ width: "16px", height: "2px", background: ENC_COLOR, display: "inline-block", borderRadius: "1px" }} />
           Encrypted bypass
         </span>

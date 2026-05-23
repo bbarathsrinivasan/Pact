@@ -45,6 +45,7 @@ from policy import check_policy, scan_for_sensitive
 from registry import find_agent_by_name, find_agents_by_capability, get_agent, get_all_agents
 from user_context import (
     answer_profile_question,
+    detect_inline_profile_update,
     enrich_intent_from_context,
     find_missing_for_booking,
     format_missing_prompt,
@@ -126,6 +127,14 @@ Respond in 1-3 sentences. Be direct and helpful.
 
 _MAX_HISTORY = 20
 
+# Generic category words that don't count as a specific product selection.
+# When the intent has one of these as "product", we still show the catalog.
+_GENERIC_PRODUCT_TERMS = {
+    "shoes", "shoe", "sneakers", "sneaker", "kicks", "footwear",
+    "boots", "sandals", "trainers", "runners", "something", "anything",
+    "clothes", "clothing", "items", "products", "stuff",
+}
+
 _REFERS_PRIOR_RE = re.compile(
     r"\b("
     r"here|there|this place|that place|this one|that one|same place|"
@@ -133,6 +142,12 @@ _REFERS_PRIOR_RE = re.compile(
     r"book here|book there|make a booking here|make a booking there|"
     r"reserve here|reserve there"
     r")\b",
+    re.IGNORECASE,
+)
+
+_BYPASS_RE = re.compile(
+    r"\b(?:go ahead|book anyway|proceed|skip|just book|do it anyway|"
+    r"book without|proceed without|continue|yes do it|yes go ahead)\b",
     re.IGNORECASE,
 )
 
@@ -467,6 +482,9 @@ def _finish_turn(
     confirmation_code: str | None = None,
     sensitive_warning=None,
     response_state: str | None = None,
+    handshake_events: list | None = None,
+    products: list | None = None,
+    store_info: dict | None = None,
 ) -> dict:
     """Persist memory + optional pending booking state; return API payload."""
     _append_history(memory, "agent", response)
@@ -477,6 +495,7 @@ def _finish_turn(
         "state":               response_state or state,
         "policy_check_result": policy_check_result,
         "sensitive_warning":   sensitive_warning,
+        "handshake_events":    handshake_events or [],
     }
     if session_token:
         result["session_token"] = session_token
@@ -484,6 +503,10 @@ def _finish_turn(
         result["business_name"] = business_name
     if confirmation_code:
         result["confirmation_code"] = confirmation_code
+    if products:
+        result["products"] = products
+    if store_info:
+        result["store_info"] = store_info
     return result
 
 
@@ -506,6 +529,31 @@ async def run_personal_agent(message: str, context: str, session_id: str) -> dic
 
     # Record user turn before any AI call
     _append_history(memory, "user", message)
+
+    # ── Inline profile updates (e.g. "My shoe size is 10.5") ──────────────
+    # Only capture non-PII fields here. PII fields (phone, email, address,
+    # full_name) must go through the sensitive scanner below so the user
+    # gets the appropriate privacy warning.
+    _PII_INLINE_FIELDS = {"full_name", "email", "phone", "address"}
+    inline_updates = detect_inline_profile_update(message)
+    safe_updates = {k: v for k, v in inline_updates.items() if k not in _PII_INLINE_FIELDS}
+
+    if safe_updates:
+        overrides = dict(memory.get("context_overrides") or {})
+        overrides.update(safe_updates)
+        memory["context_overrides"] = overrides
+        _append_history(memory, "user", message)
+
+        _LABELS = {
+            "size": "shoe size", "budget_range": "budget",
+            "party_size": "party size", "date": "date", "color": "color preference",
+        }
+        parts = [f"**{_LABELS.get(k, k)}**: {v}" for k, v in safe_updates.items()]
+        ack = (
+            f"Got it! I've noted your {', '.join(parts)} for this session. 🙌\n\n"
+            "Ready to help — just say what you'd like to book or buy!"
+        )
+        return _finish_turn(session_id, "idle", memory, ack)
 
     # ── Sensitive input scan — fires BEFORE any AI ──────────────────────────
     scan = scan_for_sensitive(message)
@@ -555,28 +603,117 @@ async def run_personal_agent(message: str, context: str, session_id: str) -> dic
     memory["last_discussed_agent_id"] = agent["id"]
     memory["last_discussed_agent_name"] = agent.get("name", "Business")
 
+    # ── E-commerce: no product specified → show catalog with images ────────
+    ai_safe_fields_check = agent.get("ai_safe_schema", [])
+    is_ecommerce_agent = "product" in ai_safe_fields_check
+    _raw_product = (intent.get("product") or "").strip().lower()
+
+    # Gemini reads full chat history and may carry forward a product from a
+    # previous order even when the user is now browsing again. Guard: only
+    # treat it as a specific product if ≥2 of its words appear in the
+    # CURRENT message (or it's a single very specific token ≥8 chars present
+    # in the message).
+    def _product_grounded_in_message(product: str, msg: str) -> bool:
+        if not product or product in ("null", "none"):
+            return False
+        msg_l = msg.lower()
+        significant = [w for w in product.split() if len(w) > 2]
+        if not significant:
+            return False
+        matches = sum(1 for w in significant if w in msg_l)
+        return matches >= min(2, len(significant))
+
+    has_product = (
+        _raw_product not in ("", "null", "none")
+        and _raw_product not in _GENERIC_PRODUCT_TERMS
+        and _product_grounded_in_message(_raw_product, message)
+    )
+
+    if is_ecommerce_agent and not has_product:
+        all_products = agent.get("products", [])
+
+        # Read user preferences from context
+        user_size   = get_field_value(context, "size", overrides)   or overrides.get("size", "")
+        user_budget_raw = get_field_value(context, "budget_range", overrides) or overrides.get("budget_range", "")
+        user_color  = overrides.get("color", "")
+
+        # Parse budget ceiling
+        budget_cents: float | None = None
+        if user_budget_raw:
+            m = re.search(r"(\d+(?:\.\d+)?)", str(user_budget_raw))
+            if m:
+                budget_cents = float(m.group(1))
+
+        # Filter products by budget if we have one
+        products = (
+            [p for p in all_products if p.get("price", 0) <= budget_cents]
+            if budget_cents is not None
+            else all_products
+        ) or all_products  # fall back to full list if filter leaves nothing
+
+        # Build match reason string
+        match_parts: list[str] = []
+        if user_size:
+            match_parts.append(f"size {user_size}")
+        if budget_cents is not None:
+            match_parts.append(f"budget under ${int(budget_cents)}")
+        if user_color:
+            match_parts.append(f"{user_color} styles")
+
+        # Try to surface brand preferences from context string
+        brand_keywords = ["nike", "adidas", "vans", "converse", "new balance", "jordan"]
+        ctx_lower = context.lower()
+        preferred_brands = [b.title() for b in brand_keywords if b in ctx_lower]
+        if preferred_brands:
+            match_parts.append(f"love {', '.join(preferred_brands[:3])}")
+
+        if match_parts:
+            match_reason = "Matched your preferences: " + " · ".join(match_parts)
+            resp = (
+                f"Based on your preferences I found **{agent.get('name')}** — "
+                f"perfect fit for {', '.join(match_parts[:2])}. "
+                "Here's what's in stock for you 👟"
+            )
+        else:
+            match_reason = "Top-rated store for your style"
+            resp = (
+                f"Here's what **{agent.get('name')}** has in stock today. "
+                "Tap any shoe to order, or tell me your size and budget and I'll narrow it down 👟"
+            )
+
+        store_info = {
+            "name":         agent.get("name", ""),
+            "description":  agent.get("description", ""),
+            "match_reason": match_reason,
+            "source_url":   agent.get("source_url", ""),
+        }
+
+        return _finish_turn(session_id, "idle", memory, resp, products=products, store_info=store_info)
+
     # ── Policy check ───────────────────────────────────────────────────────
     ai_safe_fields   = agent.get("ai_safe_schema", [])
     encrypted_fields = agent.get("encrypted_schema", {}).get("fields", [])
     all_fields       = ai_safe_fields + encrypted_fields
     policy           = check_policy(all_fields, context)
-    approved_ai_safe = [f for f in ai_safe_fields if f in policy["approved"]]
-    encrypt_needed   = [f for f in encrypted_fields if f in policy["encrypt"]]
 
-    # ── Require profile data before proceeding ─────────────────────────────
-    missing = find_missing_for_booking(
-        context, intent, encrypt_needed, approved_ai_safe, overrides
-    )
-    if missing:
-        return _finish_turn(
-            session_id,
-            "idle",
-            memory,
-            format_missing_prompt(missing, agent.get("name")),
-        )
+    # Agent's encrypted_schema fields are ALWAYS encrypted — user context cannot
+    # make them visible to AI. Only ai_safe_schema fields can be "approved".
+    approved_ai_safe = [f for f in ai_safe_fields   if f not in policy["blocked"]]
+    encrypt_needed   = list(encrypted_fields)  # ALL encrypted_schema fields, always
+
+    # If user context explicitly blocks an ai_safe field, honour that
+    approved_ai_safe = [f for f in approved_ai_safe if f not in policy["blocked"]]
+
+    # Build the display policy with the correct, agent-schema-aware classification
+    display_policy = {
+        "approved":              approved_ai_safe,
+        "encrypt":               encrypt_needed,
+        "blocked":               [f for f in policy["blocked"] if f not in encrypted_fields],
+        "requires_confirmation": True,
+    }
 
     ai_safe_data = _collect_ai_safe(intent, approved_ai_safe, context, overrides)
-    pii_data     = _collect_pii_from_context(context, policy["encrypt"], overrides)
+    pii_data     = _collect_pii_from_context(context, encrypted_fields, overrides)
 
     # ── A2A task (submitted) ───────────────────────────────────────────────
     task = task_create(
@@ -617,19 +754,25 @@ async def run_personal_agent(message: str, context: str, session_id: str) -> dic
             "privacy_type": None,
         })
 
+    # ── Handshake events for in-chat display (minimal — UI shows glassmorphism) ─
+    handshake_events = [
+        {"icon": "🔍", "text": f"Discovered {agent.get('name', 'Business')} on Pact",   "type": "discover"},
+        {"icon": "⚡", "text": f"A2A task {task.id[:8]} — secure handshake established", "type": "handshake"},
+    ]
+
     pending = {
         "agent_id":     agent["id"],
         "agent_name":   agent.get("name", "Business"),
         "intent":       intent,
         "ai_safe_data": ai_safe_data,
         "pii_data":     pii_data,
-        "policy":       policy,
+        "policy":       display_policy,
         "a2a_task_id":  task.id,
     }
 
     response_text = (
-        f"I found **{agent.get('name', 'a business agent')}** on the Pact network. "
-        "Review what your agent will share below, then confirm to proceed."
+        f"Locked in **{agent.get('name', 'the business')}** — "
+        "review the privacy summary below and hit **Confirm** to proceed. 🔐"
     )
 
     return _finish_turn(
@@ -638,10 +781,11 @@ async def run_personal_agent(message: str, context: str, session_id: str) -> dic
         memory,
         response_text,
         pending=pending,
-        policy_check_result=policy,
+        policy_check_result=display_policy,
         session_token=session_id,
         business_name=agent.get("name", "Business"),
         response_state="policy_check",
+        handshake_events=handshake_events,
     )
 
 

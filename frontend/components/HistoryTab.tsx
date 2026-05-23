@@ -86,7 +86,7 @@ function HistoryCard({ item, expanded, onToggle }: {
             style={{
               fontFamily: "monospace",
               fontSize: "10px",
-              color: "#525252",
+              color: "#8a8a8a",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -121,7 +121,7 @@ function HistoryCard({ item, expanded, onToggle }: {
                   style={{
                     fontFamily: "monospace",
                     fontSize: "9px",
-                    color: "#525252",
+                    color: "#8a8a8a",
                     textTransform: "uppercase",
                     letterSpacing: "1px",
                   }}
@@ -155,7 +155,7 @@ function HistoryCard({ item, expanded, onToggle }: {
                   style={{
                     fontFamily: "monospace",
                     fontSize: "9px",
-                    color: "#525252",
+                    color: "#8a8a8a",
                     textTransform: "uppercase",
                     letterSpacing: "1px",
                   }}
@@ -209,15 +209,15 @@ function HistoryCard({ item, expanded, onToggle }: {
               style={{
                 fontFamily: "monospace",
                 fontSize: "9px",
-                color: "#525252",
+                color: "#8a8a8a",
                 textDecoration: "none",
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "3px",
                 marginTop: "6px",
               }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#737373")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#525252")}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#9a9a9a")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#8a8a8a")}
             >
               View {item.agent_name} dashboard →
             </a>
@@ -261,7 +261,7 @@ export default function HistoryTab() {
             style={{
               fontFamily: "monospace",
               fontSize: "9px",
-              color: "#525252",
+              color: "#8a8a8a",
               textTransform: "uppercase",
               letterSpacing: "2px",
               marginBottom: "2px",
@@ -269,7 +269,7 @@ export default function HistoryTab() {
           >
             Interaction History
           </p>
-          <p style={{ fontSize: "11px", color: "#525252" }}>
+          <p style={{ fontSize: "11px", color: "#8a8a8a" }}>
             {history.length} session{history.length !== 1 ? "s" : ""}
           </p>
         </div>
@@ -287,7 +287,7 @@ export default function HistoryTab() {
             cursor: "pointer",
             fontFamily: "monospace",
             fontSize: "11px",
-            color: "#525252",
+            color: "#8a8a8a",
             padding: 0,
           }}
         >

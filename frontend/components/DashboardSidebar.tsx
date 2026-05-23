@@ -109,25 +109,25 @@ function TrustBoundaryMini() {
         <circle cx="28" cy="50" r="14" fill="url(#sb-p)" />
         <circle cx="28" cy="50" r="9"  fill="#0e0e0e" stroke="#60a5fa" strokeWidth="1" />
         <text x="28" y="53" textAnchor="middle" fontSize="9" fill="#60a5fa">◈</text>
-        <text x="28" y="68" textAnchor="middle" fontSize="5" fill="#525252" fontFamily="monospace">personal</text>
+        <text x="28" y="68" textAnchor="middle" fontSize="5" fill="#8a8a8a" fontFamily="monospace">personal</text>
 
         {/* Gemini */}
         <circle cx="110" cy="52" r="16" fill="url(#sb-g)" />
         <circle cx="110" cy="52" r="10" fill="#0c0c0e" stroke="#a78bfa" strokeWidth="1" />
         <text x="110" y="55.5" textAnchor="middle" fontSize="10" fill="#a78bfa">⬡</text>
-        <text x="110" y="70" textAnchor="middle" fontSize="5" fill="#525252" fontFamily="monospace">gemini</text>
+        <text x="110" y="70" textAnchor="middle" fontSize="5" fill="#8a8a8a" fontFamily="monospace">gemini</text>
 
         {/* Business */}
         <circle cx="190" cy="36" r="12" fill="url(#sb-b)" />
         <circle cx="190" cy="36" r="8"  fill="#0e0e0e" stroke="#34d399" strokeWidth="1" />
         <text x="190" y="39" textAnchor="middle" fontSize="8" fill="#34d399">◈</text>
-        <text x="190" y="52" textAnchor="middle" fontSize="5" fill="#525252" fontFamily="monospace">business</text>
+        <text x="190" y="52" textAnchor="middle" fontSize="5" fill="#8a8a8a" fontFamily="monospace">business</text>
 
         {/* Secure endpoint */}
         <circle cx="190" cy="72" r="11" fill="url(#sb-s)" />
         <circle cx="190" cy="72" r="7"  fill="#0e0e0e" stroke="#fbbf24" strokeWidth="1" />
         <text x="190" y="75" textAnchor="middle" fontSize="8" fill="#fbbf24">🔒</text>
-        <text x="190" y="88" textAnchor="middle" fontSize="5" fill="#525252" fontFamily="monospace">secure</text>
+        <text x="190" y="88" textAnchor="middle" fontSize="5" fill="#8a8a8a" fontFamily="monospace">secure</text>
 
         {/* Animated particle on AI-safe path */}
         <circle r="2" fill="#22c55e" opacity="0.9"
@@ -139,9 +139,9 @@ function TrustBoundaryMini() {
 
         {/* Legend */}
         <circle cx="8"  cy="101" r="2.5" fill="#22c55e" />
-        <text x="13"  y="104" fontSize="5" fill="#525252" fontFamily="monospace">AI-safe</text>
+        <text x="13"  y="104" fontSize="5" fill="#8a8a8a" fontFamily="monospace">AI-safe</text>
         <circle cx="60" cy="101" r="2.5" fill="#f59e0b" />
-        <text x="65" y="104" fontSize="5" fill="#525252" fontFamily="monospace">enc bypass</text>
+        <text x="65" y="104" fontSize="5" fill="#8a8a8a" fontFamily="monospace">enc bypass</text>
       </svg>
     </div>
   );
@@ -290,10 +290,81 @@ export default function DashboardSidebar({ agent, loading }: DashboardSidebarPro
 
       <Divider />
 
-      {/* Endpoint */}
-      <Label>Secure Endpoint</Label>
-      <p style={monoStyle}>{agent?.encrypted_schema?.endpoint ?? "/secure/submit"}</p>
-      <p style={{ ...monoStyle, marginTop: "3px" }}>AES-256-Fernet</p>
+      {/* Endpoints */}
+      <Label>Endpoints</Label>
+      {loading ? (
+        <>
+          <Skeleton w="100%" h="52px" />
+        </>
+      ) : (() => {
+        const slug = agent?.id ? agent.id.replace("pact://", "") : "";
+        const secureEndpoint = agent?.encrypted_schema?.endpoint ?? `/secure/submit/${slug}`;
+        const endpoints = [
+          {
+            method: "GET",
+            path:   `/a2a/agents/${slug}/card`,
+            note:   "A2A discovery card",
+            color:  "#60a5fa",
+            bg:     "rgba(96,165,250,0.07)",
+          },
+          {
+            method: "POST",
+            path:   `/a2a/agents/${slug}/tasks`,
+            note:   "A2A task creation",
+            color:  "#a78bfa",
+            bg:     "rgba(167,139,250,0.07)",
+          },
+          {
+            method: "POST",
+            path:   secureEndpoint,
+            note:   "AES-256 PII — AI never sees this",
+            color:  "#f59e0b",
+            bg:     "rgba(245,158,11,0.07)",
+          },
+        ];
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {endpoints.map((ep) => (
+              <div
+                key={ep.path}
+                style={{
+                  background:   ep.bg,
+                  border:       `1px solid ${ep.color}22`,
+                  borderRadius: "5px",
+                  padding:      "6px 8px",
+                  display:      "flex",
+                  flexDirection:"column",
+                  gap:          "3px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <span
+                    style={{
+                      fontFamily: "monospace", fontSize: "8px",
+                      padding: "1px 5px", borderRadius: "3px",
+                      background: `${ep.color}18`, color: ep.color,
+                      border: `1px solid ${ep.color}33`, flexShrink: 0,
+                    }}
+                  >
+                    {ep.method}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: "monospace", fontSize: "9px",
+                      color: "#8a8a8a", wordBreak: "break-all",
+                    }}
+                  >
+                    {ep.path}
+                  </span>
+                </div>
+                <p style={{ fontFamily: "monospace", fontSize: "8px", color: "#2a2a2a", paddingLeft: "28px" }}>
+                  {ep.note}
+                </p>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
     </aside>
   );
 }

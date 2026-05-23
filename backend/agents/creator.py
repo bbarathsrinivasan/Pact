@@ -76,6 +76,7 @@ async def classify_fields(business_data: dict) -> dict:
     """
     Classify customer fields into ai_safe vs encrypted.
     Passes products through unchanged from scraper output.
+    Returns _thoughts for UI display.
     """
     fields   = business_data.get("customer_fields", [])
     services = business_data.get("services", [])
@@ -87,13 +88,34 @@ async def classify_fields(business_data: dict) -> dict:
         fields=fields,
     )
 
+    thoughts = ""
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
-        response = await client.aio.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-        )
-        raw = response.text.strip()
+
+        # Try with thinking enabled
+        try:
+            from google.genai import types as _types
+            response = await client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=_types.GenerateContentConfig(
+                    thinking_config=_types.ThinkingConfig(include_thoughts=True)
+                ),
+            )
+            raw_answer = ""
+            for part in response.candidates[0].content.parts:
+                if getattr(part, "thought", False):
+                    thoughts += part.text
+                else:
+                    raw_answer += part.text
+            raw = raw_answer.strip()
+        except Exception:
+            response = await client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
+            raw = response.text.strip()
+
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
 
@@ -112,6 +134,13 @@ async def classify_fields(business_data: dict) -> dict:
     result["business_name"] = business_data.get("business_name", "Unknown Business")
     result["description"]   = business_data.get("description", "")
     result["products"]      = business_data.get("products", [])
+    result["_scrape_url"]   = business_data.get("_scrape_url", "")
+
+    # Thinking trace for UI
+    result["_thoughts"]        = thoughts.strip()
+    result["_thought_summary"] = (
+        (thoughts[:500] + "…") if len(thoughts) > 500 else thoughts.strip()
+    )
     return result
 
 

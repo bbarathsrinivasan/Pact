@@ -222,6 +222,16 @@ def get_history(limit: int = 30) -> list[dict]:
 # ── Seed data ──────────────────────────────────────────────────────────────────
 
 
+def delete_agent_data(agent_id: str) -> None:
+    """Remove all orders and activity for an agent (used when deleting from registry)."""
+    conn = get_conn()
+    conn.execute("DELETE FROM orders WHERE agent_id = ?", (agent_id,))
+    conn.execute("DELETE FROM activity_log WHERE agent_id = ?", (agent_id,))
+    conn.execute("DELETE FROM agent_sessions WHERE agent_id = ?", (agent_id,))
+    conn.commit()
+    conn.close()
+
+
 def seed_agent_data(agent_id: str, agent_card: dict) -> None:
     """Seed realistic mock orders and activity on first onboard."""
     products = agent_card.get("products") or [

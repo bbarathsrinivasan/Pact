@@ -33,9 +33,11 @@ A2A protocol
 import json
 import random
 import string
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from a2a import (
@@ -48,10 +50,11 @@ from a2a import (
 )
 from agents.builder import build_agent_card
 from agents.creator import classify_fields
-from agents.scraper import scrape_business
+from agents.scraper import crawl_and_extract, scrape_business
 from config import BUSINESS_ENCRYPTION_KEY, ENCRYPTED_STORE_PATH, USER_CONTEXT_PATH
 from database import (
     delete_session,
+    delete_agent_data,
     get_activity,
     get_history,
     get_orders,
@@ -61,11 +64,10 @@ from database import (
     create_order,
     register_session,
     save_session,
-    seed_agent_data,
 )
 from encryption import decrypt_fields
 from personal.agent import run_personal_agent
-from registry import get_agent, get_all_agents
+from registry import delete_agent, get_agent, get_all_agents
 
 app = FastAPI(title="Pact — Privacy-Preserving Agent Network")
 
@@ -84,68 +86,6 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup() -> None:
     init_db()
-    _seed_demo_agents()
-
-
-def _seed_demo_agents() -> None:
-    """
-    Ensure at least two agents exist in the registry for multi-business demo.
-    Only inserts agents that are not already registered (idempotent).
-    """
-    from registry import get_agent, register_agent
-    from datetime import datetime
-
-    DEMO_AGENTS = [
-        {
-            "id":          "pact://trattoria-sf",
-            "type":        "business",
-            "name":        "Trattoria SF",
-            "description": "Cozy Italian restaurant in San Francisco serving handmade pasta and wood-fired pizza.",
-            "capabilities": ["accept reservations", "private dining", "dietary accommodations", "wine pairing"],
-            "privacy_note": "Date, time, and party size go through AI; name, email, and phone are AES-256 encrypted.",
-            "ai_safe_schema": ["date", "time", "party_size", "dietary_needs", "special_requests"],
-            "encrypted_schema": {
-                "fields":    ["full_name", "email", "phone"],
-                "endpoint":  "/secure/submit/trattoria-sf",
-                "method":    "POST",
-                "encryption":"AES-256-Fernet",
-            },
-            "products": [
-                {"name": "Table Reservation",        "price": 0.0,  "description": "Reserve your table — no fee"},
-                {"name": "Chef's Tasting Menu",       "price": 95.0, "description": "6-course seasonal tasting menu"},
-                {"name": "Private Dining Experience", "price": 150.0,"description": "Exclusive private room, min 8 guests"},
-                {"name": "Wine Pairing",              "price": 45.0, "description": "Sommelier-curated 4-glass flight"},
-            ],
-            "registered_at": datetime(2026, 5, 1).isoformat(),
-        },
-        {
-            "id":          "pact://pact-demo-store",
-            "type":        "business",
-            "name":        "Pact Demo Store",
-            "description": "Demo e-commerce store for the Pact privacy-preserving agent network.",
-            "capabilities": ["process orders", "express delivery", "product catalog", "order tracking"],
-            "privacy_note": "Product, quantity, and delivery speed go through AI; card number, CVV, and address are AES-256 encrypted.",
-            "ai_safe_schema": ["product", "quantity", "delivery_speed", "color", "size", "notes"],
-            "encrypted_schema": {
-                "fields":    ["full_name", "email", "address", "card_number", "cvv", "card_expiry"],
-                "endpoint":  "/secure/submit/pact-demo-store",
-                "method":    "POST",
-                "encryption":"AES-256-Fernet",
-            },
-            "products": [
-                {"name": "Standard Order",   "price": 0.0,  "description": "Place a new order"},
-                {"name": "Express Delivery", "price": 9.99, "description": "Next-day shipping upgrade"},
-                {"name": "Gift Wrapping",    "price": 4.99, "description": "Add gift wrap and message"},
-            ],
-            "registered_at": datetime(2026, 5, 1).isoformat(),
-        },
-    ]
-
-    for agent in DEMO_AGENTS:
-        if not get_agent(agent["id"]):
-            register_agent(agent)
-            seed_agent_data(agent["id"], agent)
-            print(f"[startup] Seeded demo agent: {agent['name']}")
 
 
 # ── Shared helpers ─────────────────────────────────────────────────────────────
@@ -164,6 +104,13 @@ def _read_context() -> str:
 
 class OnboardRequest(BaseModel):
     url: str
+
+class OnboardClassifyRequest(BaseModel):
+    business_data: dict
+
+class OnboardBuildRequest(BaseModel):
+    classified: dict
+    business_name: str
 
 
 class ChatRequest(BaseModel):
@@ -210,20 +157,135 @@ class A2ATaskRequest(BaseModel):
 async def onboard(req: OnboardRequest):
     """
     Full onboarding pipeline:
-      1. httpx scrape the URL
+      1. httpx scrape the URL (Antigravity thinking model)
       2. Gemini classifies fields (ai_safe vs encrypted)
-      3. Build + register agent card
+      3. Build + register agent card (Gemini generates capabilities)
       4. Seed mock orders/activity for dashboard demo
+    Returns step-by-step thinking traces for UI display.
     """
     business_data = await scrape_business(req.url)
     classified    = await classify_fields(business_data)
-    agent_card    = await build_agent_card(classified, classified.get("business_name", "Business"))
-    seed_agent_data(agent_card["id"], agent_card)
+    scrape_url    = business_data.get("_scrape_url", req.url)
+    agent_card    = await build_agent_card(classified, classified.get("business_name", "Business"), scrape_url=scrape_url)
 
-    # Surface scrape diagnostics so the frontend/caller can see what happened
+    # Surface scrape diagnostics + full thinking chain for the onboarding UI
     agent_card["_scrape_status"] = business_data.get("_scrape_status", "unknown")
     agent_card["_scrape_url"]    = business_data.get("_scrape_url", req.url)
+    agent_card["_thinking"] = {
+        "scrape": {
+            "model":          business_data.get("_scrape_model", "unknown"),
+            "status":         business_data.get("_scrape_status", "unknown"),
+            "page_chars":     business_data.get("_page_chars", 0),
+            "thoughts":       business_data.get("_thought_summary", ""),
+            "extracted_name": business_data.get("business_name", ""),
+            "num_fields":     len(business_data.get("customer_fields", [])),
+            "num_products":   len(business_data.get("products", [])),
+            "services":       business_data.get("services", []),
+        },
+        "classify": {
+            "model":          "gemini-3.5-flash",
+            "thoughts":       classified.get("_thought_summary", ""),
+            "ai_safe":        classified.get("ai_safe", []),
+            "encrypted":      classified.get("encrypted", []),
+            "privacy_note":   classified.get("privacy_note", ""),
+        },
+        "build": {
+            "model":          "gemini-3.5-flash",
+            "thoughts":       agent_card.get("_thought_summary", ""),
+            "capabilities":   agent_card.get("capabilities", []),
+            "privacy_note":   agent_card.get("privacy_note", ""),
+            "endpoint":       agent_card.get("encrypted_schema", {}).get("endpoint", ""),
+        },
+    }
+
+    # Strip internal thinking fields from the stored agent card (not needed in registry)
+    for k in ("_thoughts", "_thought_summary"):
+        agent_card.pop(k, None)
+
     return agent_card
+
+
+# ── Streaming onboarding — three separate steps ────────────────────────────────
+
+
+def _url_domain(url: str) -> str:
+    """Normalise a URL to its bare hostname, stripping www."""
+    try:
+        return urlparse(url).netloc.lower().removeprefix("www.")
+    except Exception:
+        return ""
+
+
+@app.post("/api/onboard/scrape")
+async def onboard_scrape_stream(req: OnboardRequest):
+    """
+    Step 1: Multi-page crawl + Antigravity streaming extraction.
+    Returns text/event-stream (SSE).  Each event is a JSON line:
+      data: {"type": "crawl_start"|"crawl_done"|"thinking"|"result", …}
+    The final event is always type="result" with the full business_data dict.
+    Raises 409 if an agent for the same domain is already registered.
+    """
+    # ── Duplicate URL check (before starting the stream) ──────────────
+    incoming_domain = _url_domain(req.url)
+    if incoming_domain:
+        for agent in get_all_agents().values():
+            existing_domain = _url_domain(agent.get("source_url", ""))
+            if existing_domain and existing_domain == incoming_domain:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"'{agent['name']}' is already registered for {incoming_domain}. "
+                        "Delete it from the registry first to re-onboard."
+                    ),
+                )
+
+    async def generate():
+        async for event in crawl_and_extract(req.url):
+            yield f"data: {json.dumps(event)}\n\n"
+        yield "data: {\"type\": \"done\"}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control":    "no-cache",
+            "X-Accel-Buffering":"no",
+            "Connection":       "keep-alive",
+        },
+    )
+
+
+@app.post("/api/onboard/classify")
+async def onboard_classify(req: OnboardClassifyRequest):
+    """Step 2: Classify fields into ai_safe vs encrypted with Gemini."""
+    classified = await classify_fields(req.business_data)
+    return {
+        "classified": classified,
+        "thinking": {
+            "model":        "gemini-3.5-flash",
+            "thoughts":     classified.get("_thought_summary", ""),
+            "ai_safe":      classified.get("ai_safe", []),
+            "encrypted":    classified.get("encrypted", []),
+            "privacy_note": classified.get("privacy_note", ""),
+        },
+    }
+
+
+@app.post("/api/onboard/build")
+async def onboard_build(req: OnboardBuildRequest):
+    """Step 3: Build agent card with Gemini and register it. No pre-populated data."""
+    scrape_url = req.classified.get("_scrape_url", "")
+    agent_card = await build_agent_card(req.classified, req.business_name, scrape_url=scrape_url)
+    thinking = {
+        "model":        "gemini-3.5-flash",
+        "thoughts":     agent_card.get("_thought_summary", ""),
+        "capabilities": agent_card.get("capabilities", []),
+        "privacy_note": agent_card.get("privacy_note", ""),
+        "endpoint":     agent_card.get("encrypted_schema", {}).get("endpoint", ""),
+    }
+    for k in ("_thoughts", "_thought_summary"):
+        agent_card.pop(k, None)
+    return {"agent_card": agent_card, "thinking": thinking}
 
 
 @app.get("/api/business")
@@ -237,6 +299,20 @@ async def get_business(id: str):
 @app.get("/api/registry")
 async def get_registry():
     return get_all_agents()
+
+
+@app.delete("/api/registry")
+async def delete_registry_agent(id: str):
+    """
+    Delete an agent from the registry by its full ID (e.g. pact://my-business).
+    Also purges all associated orders and activity from the database.
+    """
+    agent = get_agent(id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent '{id}' not found")
+    delete_agent(id)
+    delete_agent_data(id)
+    return {"deleted": id, "name": agent.get("name", "")}
 
 
 # ── Personal agent chat ────────────────────────────────────────────────────────

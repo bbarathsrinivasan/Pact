@@ -34,7 +34,8 @@ function RegistryContent() {
     if (h) setHighlightId(decodeAgentId(h));
   }, [params]);
 
-  useEffect(() => {
+  const loadAgents = () => {
+    setLoading(true);
     fetch(`${API}/api/registry`)
       .then((r) => r.json())
       .then((data) => {
@@ -43,7 +44,26 @@ function RegistryContent() {
         setLoading(false);
       })
       .catch(() => { setError("Failed to load registry."); setLoading(false); });
-  }, []);
+  };
+
+  useEffect(() => { loadAgents(); }, []);
+
+  const handleDelete = async (agentId: string) => {
+    try {
+      const res = await fetch(`${API}/api/registry?id=${encodeURIComponent(agentId)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setError(err.detail ?? `Delete failed (${res.status})`);
+        return;
+      }
+      // Refresh the list
+      loadAgents();
+    } catch {
+      setError("Failed to delete agent — is the backend running?");
+    }
+  };
 
   // Scroll to highlighted card
   useEffect(() => {
@@ -246,6 +266,7 @@ function RegistryContent() {
                 key={agent.id}
                 agent={agent}
                 highlighted={agent.id === highlightId}
+                onDelete={handleDelete}
               />
             ))}
           </div>

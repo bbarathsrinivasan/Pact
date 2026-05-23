@@ -13,7 +13,7 @@ interface ProtocolEvent {
 
 const EVENT_CFG: Record<string, { label: string; color: string; prefix: string }> = {
   handshake_initiated: { label: "HANDSHAKE",    color: "#60a5fa", prefix: "⟷" },
-  field_classified:    { label: "CLASSIFY",      color: "#737373", prefix: "◎" },
+  field_classified:    { label: "CLASSIFY",      color: "#9a9a9a", prefix: "◎" },
   ai_safe_sent:        { label: "AI TRANSFER",   color: "#22c55e", prefix: "→" },
   encrypted_direct:    { label: "ENC BYPASS",    color: "#f59e0b", prefix: "🔒" },
   order_confirmed:     { label: "CONFIRMED",     color: "#22c55e", prefix: "✓" },
@@ -32,7 +32,7 @@ function PrivacyTag({ type }: { type?: string | null }) {
         ✓ through AI
       </span>
     );
-  return <span style={{ color: "#525252", fontSize: "10px" }}>—</span>;
+  return <span style={{ color: "#8a8a8a", fontSize: "10px" }}>—</span>;
 }
 
 interface LiveProtocolProps {
@@ -101,7 +101,7 @@ export default function LiveProtocol({ agentId }: LiveProtocolProps) {
       >
         <span
           className="text-xs uppercase tracking-widest font-medium"
-          style={{ color: "#737373" }}
+          style={{ color: "#9a9a9a" }}
         >
           Live Protocol
         </span>
@@ -125,11 +125,11 @@ export default function LiveProtocol({ agentId }: LiveProtocolProps) {
       >
         {events.length === 0 ? (
           <div style={{ padding: "32px 14px", textAlign: "center" }}>
-            <p style={{ color: "#525252", fontSize: "12px" }}>Waiting for protocol events…</p>
+            <p style={{ color: "#8a8a8a", fontSize: "12px" }}>Waiting for protocol events…</p>
           </div>
         ) : (
           events.map((ev, i) => {
-            const cfg = EVENT_CFG[ev.event] ?? { label: ev.event.toUpperCase(), color: "#525252", prefix: "·" };
+            const cfg = EVENT_CFG[ev.event] ?? { label: ev.event.toUpperCase(), color: "#8a8a8a", prefix: "·" };
             const isNew = newIds.has(ev.id);
             return (
               <div
@@ -146,7 +146,7 @@ export default function LiveProtocol({ agentId }: LiveProtocolProps) {
                 }}
               >
                 {/* Timestamp */}
-                <span style={{ fontSize: "10px", color: "#525252" }}>
+                <span style={{ fontSize: "10px", color: "#8a8a8a" }}>
                   {relativeTime(ev.created_at)}
                 </span>
 
@@ -170,7 +170,7 @@ export default function LiveProtocol({ agentId }: LiveProtocolProps) {
                 <span
                   style={{
                     fontSize: "10px",
-                    color: "#737373",
+                    color: "#9a9a9a",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
                     whiteSpace: "nowrap",

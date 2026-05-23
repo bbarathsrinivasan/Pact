@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { relativeTime } from "../lib/utils";
 
 interface AgentCard {
@@ -45,9 +46,20 @@ function FieldList({
 interface RegistryCardProps {
   agent: AgentCard;
   highlighted?: boolean;
+  onDelete?: (id: string) => void;
 }
 
-export default function RegistryCard({ agent, highlighted }: RegistryCardProps) {
+export default function RegistryCard({ agent, highlighted, onDelete }: RegistryCardProps) {
+  const [confirming, setConfirming] = useState(false);
+  const [deleting,   setDeleting]   = useState(false);
+
+  const handleDeleteClick = () => setConfirming(true);
+  const handleDeleteCancel = () => setConfirming(false);
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    onDelete?.(agent.id);
+  };
+
   return (
     <div
       id={`agent-${agent.id}`}
@@ -192,6 +204,71 @@ export default function RegistryCard({ agent, highlighted }: RegistryCardProps) 
           View Details →
         </a>
       </div>
+
+      {/* Delete row */}
+      {onDelete && (
+        <div style={{ borderTop: "1px solid var(--border)", marginTop: "12px", paddingTop: "10px" }}>
+          {!confirming ? (
+            <button
+              onClick={handleDeleteClick}
+              style={{
+                background: "none",
+                border:     "none",
+                cursor:     "pointer",
+                fontFamily: "monospace",
+                fontSize:   "11px",
+                color:      "#8a8a8a",
+                padding:    0,
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "#ef4444")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "#8a8a8a")}
+            >
+              ✕ Delete agent
+            </button>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#ef4444", flex: 1 }}>
+                {deleting ? "Deleting…" : "Delete this agent?"}
+              </span>
+              {!deleting && (
+                <>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    style={{
+                      fontFamily:   "monospace",
+                      fontSize:     "11px",
+                      padding:      "2px 10px",
+                      borderRadius: "4px",
+                      background:   "rgba(239,68,68,0.12)",
+                      border:       "1px solid rgba(239,68,68,0.35)",
+                      color:        "#ef4444",
+                      cursor:       "pointer",
+                    }}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    onClick={handleDeleteCancel}
+                    style={{
+                      fontFamily:   "monospace",
+                      fontSize:     "11px",
+                      padding:      "2px 10px",
+                      borderRadius: "4px",
+                      background:   "var(--surface)",
+                      border:       "1px solid var(--border)",
+                      color:        "var(--muted)",
+                      cursor:       "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

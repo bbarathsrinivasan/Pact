@@ -141,7 +141,8 @@ def scan_for_sensitive(message: str) -> dict:
             "warning": (
                 f"⚠ Pact blocked your message — it appears to contain {friendly}. "
                 "For your protection, this was NOT sent to any AI model. "
-                "Please remove the sensitive data and rephrase your request."
+                "Please remove the sensitive data and rephrase your request.\n\n"
+                "💡 To let Pact handle your private information securely, add it in the **Profile** tab — it'll be AES-256 encrypted and sent directly to the business, never through any AI."
             ),
         }
 

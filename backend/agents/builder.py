@@ -89,7 +89,7 @@ def _infer_type(caps_text: str, ai_safe: list) -> str:
     return "default"
 
 
-async def build_agent_card(classified: dict, business_name: str) -> dict:
+async def build_agent_card(classified: dict, business_name: str, scrape_url: str = "") -> dict:
     """
     Call Gemini 3.5 Flash to generate capabilities + privacy note,
     then assemble and register the full agent card.
@@ -105,6 +105,7 @@ async def build_agent_card(classified: dict, business_name: str) -> dict:
     gemini_caps   = []
     privacy_note  = ""
     enhanced_desc = classified.get("description", "")
+    build_thoughts = ""
 
     try:
         client = genai.Client(api_key=GEMINI_API_KEY)
@@ -115,11 +116,31 @@ async def build_agent_card(classified: dict, business_name: str) -> dict:
             encrypted=encrypted,
             products=[p.get("name") for p in products],
         )
-        response = await client.aio.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt,
-        )
-        raw = response.text.strip()
+
+        # Try with thinking enabled
+        try:
+            from google.genai import types as _types
+            response = await client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+                config=_types.GenerateContentConfig(
+                    thinking_config=_types.ThinkingConfig(include_thoughts=True)
+                ),
+            )
+            raw_answer = ""
+            for part in response.candidates[0].content.parts:
+                if getattr(part, "thought", False):
+                    build_thoughts += part.text
+                else:
+                    raw_answer += part.text
+            raw = raw_answer.strip()
+        except Exception:
+            response = await client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=prompt,
+            )
+            raw = response.text.strip()
+
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$", "", raw)
         m   = re.search(r"\{[\s\S]*\}", raw)
@@ -158,7 +179,13 @@ async def build_agent_card(classified: dict, business_name: str) -> dict:
             "encryption": "AES-256-Fernet",
         },
         "products":      products,
+        "source_url":    scrape_url,
         "registered_at": datetime.now().isoformat(),
+        # Thinking traces for UI display (not stored in registry, stripped in main.py)
+        "_thoughts":        build_thoughts.strip(),
+        "_thought_summary": (
+            (build_thoughts[:500] + "…") if len(build_thoughts) > 500 else build_thoughts.strip()
+        ),
     }
 
     reg.register_agent(card)

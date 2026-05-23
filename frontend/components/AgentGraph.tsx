@@ -103,7 +103,7 @@ export default function AgentGraph({
           Agent Communication Graph
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-xs" style={{ color: "#737373", fontFamily: "monospace" }}>
+          <span className="text-xs" style={{ color: "#9a9a9a", fontFamily: "monospace" }}>
             A2A Protocol v0.2.1
           </span>
           <span
@@ -234,7 +234,7 @@ export default function AgentGraph({
                 style={{ filter: `drop-shadow(0 0 8px ${C.personal}88)` }} />
         <text x="90" y="153" textAnchor="middle" fontSize="15" fill={C.personal}>◈</text>
         <text x="90" y="165" textAnchor="middle" fontSize="7.5" fill={C.personal} fontFamily="monospace">Personal</text>
-        <text x="90" y="175" textAnchor="middle" fontSize="7" fill="#525252" fontFamily="monospace">Agent</text>
+        <text x="90" y="175" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Agent</text>
 
         {/* Gemini */}
         <circle cx="374" cy="146" r="58" fill="url(#gGemini)"
@@ -243,7 +243,7 @@ export default function AgentGraph({
                 style={{ filter: `drop-shadow(0 0 12px ${C.gemini}99)` }} />
         <text x="374" y="140" textAnchor="middle" fontSize="18" fill={C.gemini}>⬡</text>
         <text x="374" y="154" textAnchor="middle" fontSize="7.5" fill={C.gemini} fontFamily="monospace">Gemini</text>
-        <text x="374" y="164" textAnchor="middle" fontSize="7" fill="#525252" fontFamily="monospace">3.5 Flash</text>
+        <text x="374" y="164" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">3.5 Flash</text>
 
         {/* Business Agent */}
         <circle cx="726" cy="92" r="42" fill="url(#gBusiness)"
@@ -252,7 +252,7 @@ export default function AgentGraph({
                 style={{ filter: `drop-shadow(0 0 8px ${C.business}88)` }} />
         <text x="726" y="87" textAnchor="middle" fontSize="13" fill={C.business}>◈</text>
         <text x="726" y="99" textAnchor="middle" fontSize="7.5" fill={C.business} fontFamily="monospace">{busLabel}</text>
-        <text x="726" y="109" textAnchor="middle" fontSize="7" fill="#525252" fontFamily="monospace">Business</text>
+        <text x="726" y="109" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Business</text>
 
         {/* Secure Endpoint */}
         <circle cx="726" cy="228" r="38" fill="url(#gSecure)"
@@ -261,7 +261,7 @@ export default function AgentGraph({
                 style={{ filter: `drop-shadow(0 0 8px ${C.secure}88)` }} />
         <text x="726" y="222" textAnchor="middle" fontSize="15" fill={C.secure}>🔒</text>
         <text x="726" y="236" textAnchor="middle" fontSize="7.5" fill={C.secure} fontFamily="monospace">Secure</text>
-        <text x="726" y="246" textAnchor="middle" fontSize="7" fill="#525252" fontFamily="monospace">Endpoint</text>
+        <text x="726" y="246" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Endpoint</text>
 
         {/* ── Field listing inside nodes ──────────────────────────────── */}
         {/* AI-safe fields floating near Gemini */}
@@ -283,9 +283,9 @@ export default function AgentGraph({
         {/* ── Legend ─────────────────────────────────────────────────── */}
         <rect x="12" y="266" width="264" height="22" rx="4" fill="rgba(0,0,0,0.6)" stroke="#1f1f1f" strokeWidth="0.5" />
         <circle cx="26" cy="277" r="4" fill={C.aiSafe} style={{ filter: `drop-shadow(0 0 3px ${C.aiSafe})` }} />
-        <text x="34" y="281" fontSize="8" fill="#737373" fontFamily="monospace">Through AI (safe)</text>
+        <text x="34" y="281" fontSize="8" fill="#9a9a9a" fontFamily="monospace">Through AI (safe)</text>
         <circle cx="150" cy="277" r="4" fill={C.encrypted} style={{ filter: `drop-shadow(0 0 3px ${C.encrypted})` }} />
-        <text x="158" y="281" fontSize="8" fill="#737373" fontFamily="monospace">Encrypted bypass</text>
+        <text x="158" y="281" fontSize="8" fill="#9a9a9a" fontFamily="monospace">Encrypted bypass</text>
       </svg>
     </div>
   );

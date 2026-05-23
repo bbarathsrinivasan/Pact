@@ -40,6 +40,16 @@ def _normalize_name(name: str) -> str:
     return "".join(c for c in name.lower() if c.isalnum())
 
 
+def delete_agent(agent_id: str) -> bool:
+    """Remove an agent from the registry. Returns True if it existed."""
+    registry = load_registry()
+    if agent_id not in registry:
+        return False
+    del registry[agent_id]
+    save_registry(registry)
+    return True
+
+
 def find_agent_by_name(name: str) -> dict | None:
     """Fuzzy match a business name against registered agents."""
     if not name or not name.strip():

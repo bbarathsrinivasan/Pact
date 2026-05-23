@@ -160,7 +160,7 @@ function SectionHeader({ title }: { title: string }) {
         style={{
           fontFamily: "monospace",
           fontSize: "9px",
-          color: "#525252",
+          color: "#8a8a8a",
           textTransform: "uppercase",
           letterSpacing: "2px",
         }}
@@ -212,7 +212,7 @@ function FieldRow({
         <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#ededed", lineHeight: 1 }}>
           {def.label}
         </p>
-        <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#525252", marginTop: "2px" }}>
+        <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#8a8a8a", marginTop: "2px" }}>
           {def.description}
         </p>
       </div>
@@ -285,7 +285,7 @@ export default function PrivacyTab() {
           style={{
             fontFamily: "monospace",
             fontSize: "9px",
-            color: "#525252",
+            color: "#8a8a8a",
             textTransform: "uppercase",
             letterSpacing: "2px",
             marginBottom: "4px",
@@ -293,7 +293,7 @@ export default function PrivacyTab() {
         >
           Field Privacy Rules
         </p>
-        <p style={{ fontSize: "11px", color: "#525252", lineHeight: 1.5 }}>
+        <p style={{ fontSize: "11px", color: "#8a8a8a", lineHeight: 1.5 }}>
           Control exactly what each agent can access per field.
         </p>
       </div>
@@ -361,7 +361,7 @@ export default function PrivacyTab() {
             style={{
               fontFamily: "monospace",
               fontSize: "9px",
-              color: "#525252",
+              color: "#8a8a8a",
               textTransform: "uppercase",
               letterSpacing: "2px",
               marginBottom: "10px",
@@ -403,7 +403,7 @@ export default function PrivacyTab() {
               <p style={{ fontFamily: "monospace", fontSize: "11px", color: "#ededed" }}>
                 Confirm before every booking
               </p>
-              <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#525252", marginTop: "2px" }}>
+              <p style={{ fontFamily: "monospace", fontSize: "9px", color: "#8a8a8a", marginTop: "2px" }}>
                 Show policy review screen before data is sent
               </p>
             </div>

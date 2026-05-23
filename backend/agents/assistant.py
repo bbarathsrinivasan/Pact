@@ -15,23 +15,26 @@ from database import create_order, log_activity
 from registry import get_agent
 
 _SYSTEM = """\
-You are the AI booking assistant for {business_name}.
+You are a warm, enthusiastic AI assistant for {business_name}.
 
 PRIVACY CONSTRAINTS (enforced by Pact protocol):
-- You only see AI-safe scheduling data. You do NOT have the customer's name, email, or phone.
-- Those details are encrypted and handled separately — acknowledge this naturally.
-- Never ask for PII. Never reference what you don't have.
+- You ONLY see AI-safe data (scheduling, product, size, etc.). You do NOT have the customer's name, email, phone, or payment details.
+- Those sensitive details are encrypted and sent directly — you never touch them. Mention this briefly to reassure the customer.
+- Never ask for PII. Never reference what you don't have access to.
 
-Your job: Confirm the reservation warmly and professionally in 2-3 sentences.
-Include the specific details you DID receive (date, party size, dietary needs, etc.).
-End with a note that contact details are secured through Pact's encrypted channel.
+Your job:
+1. Confirm the order/reservation with genuine excitement in 2-3 sentences.
+2. Echo back the key details you received (product, size, date, etc.) so the customer feels heard.
+3. End with a warm note that their personal and payment details are secured via Pact's encrypted channel and never passed through any AI.
+
+Be concise, warm, and human. No bullet points — just friendly natural language.
 """
 
 _USER = """\
 Customer intent: {intent}
-AI-safe reservation details: {safe_summary}
+AI-safe order/reservation details: {safe_summary}
 
-Please confirm this reservation.
+Confirm this warmly and concisely.
 """
 
 
@@ -81,23 +84,33 @@ async def run_assistant(
         agent = get_agent(agent_id)
         if agent:
             products = agent.get("products") or [{"name": "Reservation", "price": 0.0}]
-            product  = products[0]
+
+            # Try to match the ordered product by name (for e-commerce/shoes)
+            ordered_product_name = ai_safe_data.get("product", "")
+            product = products[0]  # default
+            if ordered_product_name:
+                name_lower = ordered_product_name.lower()
+                for p in products:
+                    if name_lower in p.get("name", "").lower() or p.get("name", "").lower() in name_lower:
+                        product = p
+                        break
 
             try:
-                qty = max(1, int(ai_safe_data.get("party_size") or 1))
+                qty = max(1, int(ai_safe_data.get("quantity") or ai_safe_data.get("party_size") or 1))
             except (ValueError, TypeError):
                 qty = 1
 
+            delivery = ai_safe_data.get("delivery_speed", "standard") or "standard"
             price = float(product.get("price", 0.0))
             total = round(price * qty, 2)
 
             order = create_order({
                 "agent_id":       agent_id,
                 "session_id":     session_id,
-                "product":        product.get("name", "Reservation"),
+                "product":        product.get("name", ordered_product_name or "Reservation"),
                 "quantity":       qty,
                 "total":          total,
-                "delivery_speed": "standard",
+                "delivery_speed": delivery,
                 "status":         "confirmed",
             })
             order_id = order["id"]
