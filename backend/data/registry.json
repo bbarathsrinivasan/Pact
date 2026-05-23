@@ -3,14 +3,17 @@
     "id": "pact://trattoria-sf",
     "type": "business",
     "name": "Trattoria SF",
-    "description": "A cozy Italian restaurant in the heart of San Francisco serving handmade pasta and wood-fired pizza.",
+    "description": "A cozy Italian restaurant in the heart of San Francisco serving handmade pasta and wood-fired pizza since 1987.",
     "capabilities": [
       "dine-in reservations",
       "private events",
-      "takeout"
+      "takeout",
+      "catering"
     ],
+    "privacy_note": "",
     "ai_safe_schema": [
       "date",
+      "time",
       "party_size",
       "dietary_needs",
       "special_requests"
@@ -27,24 +30,76 @@
       {
         "name": "Table Reservation",
         "price": 0.0,
-        "description": "Reserve a table for dining"
+        "description": "Reserve your table \u2014 no fee"
+      },
+      {
+        "name": "Chef's Tasting Menu",
+        "price": 95.0,
+        "description": "6-course seasonal tasting menu"
       },
       {
         "name": "Private Dining Experience",
         "price": 150.0,
-        "description": "Exclusive private room"
-      },
-      {
-        "name": "Tasting Menu",
-        "price": 95.0,
-        "description": "Chef's seasonal tasting menu"
+        "description": "Exclusive private room, min 8 guests"
       },
       {
         "name": "Wine Pairing",
         "price": 45.0,
-        "description": "Sommelier-curated wine flight"
+        "description": "Sommelier-curated 4-glass flight"
       }
     ],
-    "registered_at": "2026-05-23T12:28:29.884946"
+    "registered_at": "2026-05-23T13:36:02.796643"
+  },
+  "pact://pact-demo-store": {
+    "id": "pact://pact-demo-store",
+    "type": "business",
+    "name": "Pact Demo Store",
+    "description": "Demo e-commerce store for the Pact privacy-preserving agent network.",
+    "capabilities": [
+      "process orders",
+      "express delivery",
+      "product catalog",
+      "order tracking"
+    ],
+    "privacy_note": "Product, quantity, and delivery speed go through AI; card number, CVV, and address are AES-256 encrypted.",
+    "ai_safe_schema": [
+      "product",
+      "quantity",
+      "delivery_speed",
+      "color",
+      "size",
+      "notes"
+    ],
+    "encrypted_schema": {
+      "fields": [
+        "full_name",
+        "email",
+        "address",
+        "card_number",
+        "cvv",
+        "card_expiry"
+      ],
+      "endpoint": "/secure/submit/pact-demo-store",
+      "method": "POST",
+      "encryption": "AES-256-Fernet"
+    },
+    "products": [
+      {
+        "name": "Standard Order",
+        "price": 0.0,
+        "description": "Place a new order"
+      },
+      {
+        "name": "Express Delivery",
+        "price": 9.99,
+        "description": "Next-day shipping upgrade"
+      },
+      {
+        "name": "Gift Wrapping",
+        "price": 4.99,
+        "description": "Add gift wrap and message"
+      }
+    ],
+    "registered_at": "2026-05-01T00:00:00"
   }
 }

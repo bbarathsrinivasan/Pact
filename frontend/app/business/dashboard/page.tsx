@@ -6,6 +6,9 @@ import DashboardSidebar from "../../../components/DashboardSidebar";
 import StatCards from "../../../components/StatCards";
 import OrdersTable from "../../../components/OrdersTable";
 import ActivityLogTable from "../../../components/ActivityLogTable";
+import AgentGraph from "../../../components/AgentGraph";
+import LiveProtocol from "../../../components/LiveProtocol";
+import NetworkTraffic from "../../../components/NetworkTraffic";
 import { relativeTime, formatCurrency, decodeAgentId } from "../../../lib/utils";
 
 const API = "http://localhost:8000";
@@ -65,9 +68,10 @@ function DashboardContent() {
       setAgentId(decodeAgentId(fromParam));
       return;
     }
-    const fromStorage = typeof window !== "undefined"
-      ? localStorage.getItem("pact_business_agent_id")
-      : null;
+    const fromStorage =
+      typeof window !== "undefined"
+        ? localStorage.getItem("pact_business_agent_id")
+        : null;
     if (fromStorage) setAgentId(fromStorage);
   }, [params]);
 
@@ -77,8 +81,14 @@ function DashboardContent() {
     setAgentLoading(true);
     fetch(`${API}/api/business?id=${encodeURIComponent(agentId)}`)
       .then((r) => r.json())
-      .then((data) => { setAgent(data); setAgentLoading(false); })
-      .catch(() => { setError("Failed to load agent card."); setAgentLoading(false); });
+      .then((data) => {
+        setAgent(data);
+        setAgentLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to load agent card.");
+        setAgentLoading(false);
+      });
   }, [agentId]);
 
   // Fetch orders + activity
@@ -104,8 +114,9 @@ function DashboardContent() {
       setLastUpdated(Date.now());
       setSecondsAgo(0);
 
-      // Rough session count from unique session_ids
-      const sessions = new Set(newOrders.map((o) => o.session_id).filter(Boolean));
+      const sessions = new Set(
+        newOrders.map((o) => o.session_id).filter(Boolean)
+      );
       setSessionCount(sessions.size || 1);
     } catch {
       // silently fail on poll
@@ -132,25 +143,57 @@ function DashboardContent() {
 
   if (!agentId && !agentLoading) {
     return (
-      <div className="flex flex-col items-center justify-center" style={{ minHeight: "calc(100vh - 44px)" }}>
-        <p style={{ color: "var(--muted)" }} className="text-sm">No agent selected.</p>
-        <a href="/business" style={{ color: "var(--blue)", fontSize: "13px", marginTop: "8px" }}>
+      <div
+        className="flex flex-col items-center justify-center"
+        style={{ minHeight: "calc(100vh - 44px)" }}
+      >
+        <p style={{ color: "var(--muted)" }} className="text-sm">
+          No agent selected.
+        </p>
+        <a
+          href="/business"
+          style={{ color: "var(--blue)", fontSize: "13px", marginTop: "8px" }}
+        >
           ← Onboard a business
         </a>
       </div>
     );
   }
 
+  // Derive recent activity for AgentGraph (last 10 events)
+  const recentActivity = activity.slice(0, 10).map((e) => ({
+    event: e.event,
+    privacy_type: e.privacy_type,
+  }));
+
   return (
-    <div style={{ minHeight: "calc(100vh - 44px)", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{ minHeight: "calc(100vh - 44px)", display: "flex", flexDirection: "column" }}
+    >
       {/* Error banner */}
       {error && (
         <div
           className="flex items-center justify-between px-4 py-2 text-sm"
-          style={{ background: "#1a0a0a", border: "1px solid #7f1d1d", borderRadius: "6px", color: "var(--error)", margin: "12px 24px 0" }}
+          style={{
+            background: "#1a0a0a",
+            border: "1px solid #7f1d1d",
+            borderRadius: "6px",
+            color: "var(--error)",
+            margin: "12px 24px 0",
+          }}
         >
           {error}
-          <button onClick={() => setError(null)} style={{ background: "none", border: "none", color: "var(--error)", cursor: "pointer" }}>✕</button>
+          <button
+            onClick={() => setError(null)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--error)",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -168,7 +211,10 @@ function DashboardContent() {
       >
         <div>
           {agentLoading ? (
-            <div className="animate-pulse rounded" style={{ height: "16px", width: "120px", background: "var(--surface-2)" }} />
+            <div
+              className="animate-pulse rounded"
+              style={{ height: "16px", width: "120px", background: "var(--surface-2)" }}
+            />
           ) : (
             <div className="flex items-center gap-2">
               <span style={{ color: "var(--muted)", fontFamily: "monospace" }}>◈</span>
@@ -177,7 +223,14 @@ function DashboardContent() {
               </span>
             </div>
           )}
-          <p style={{ fontFamily: "monospace", fontSize: "11px", color: "var(--muted-2)", marginTop: "1px" }}>
+          <p
+            style={{
+              fontFamily: "monospace",
+              fontSize: "11px",
+              color: "var(--muted-2)",
+              marginTop: "1px",
+            }}
+          >
             {agentId}
           </p>
         </div>
@@ -186,22 +239,36 @@ function DashboardContent() {
 
         <span
           className="text-xs px-2 py-1 rounded flex items-center gap-1"
-          style={{ background: "var(--success-bg)", border: "1px solid var(--success-border)", color: "var(--success)", fontFamily: "monospace" }}
+          style={{
+            background: "var(--success-bg)",
+            border: "1px solid var(--success-border)",
+            color: "var(--success)",
+            fontFamily: "monospace",
+          }}
         >
           <span style={{ fontSize: "7px" }}>●</span> Live
         </span>
         <span
           className="text-xs px-2 py-1 rounded"
-          style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--muted)", fontFamily: "monospace" }}
+          style={{
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            color: "var(--muted)",
+            fontFamily: "monospace",
+          }}
         >
-          Gemini 2.0 Flash
+          Gemini 3.5 Flash
         </span>
         <a
           href={`/registry?highlight=${encodeURIComponent(agentId ?? "")}`}
           className="text-xs transition-colors duration-150"
           style={{ color: "var(--muted)", textDecoration: "none" }}
-          onMouseEnter={(e) => ((e.target as HTMLElement).style.color = "var(--text)")}
-          onMouseLeave={(e) => ((e.target as HTMLElement).style.color = "var(--muted)")}
+          onMouseEnter={(e) =>
+            ((e.target as HTMLElement).style.color = "var(--text)")
+          }
+          onMouseLeave={(e) =>
+            ((e.target as HTMLElement).style.color = "var(--muted)")
+          }
         >
           View in Registry →
         </a>
@@ -213,14 +280,42 @@ function DashboardContent() {
 
         {/* Main content */}
         <main style={{ flex: 1, overflowY: "auto", padding: "24px" }}>
-          {/* Stat cards */}
-          <StatCards
-            orders={orders}
-            sessionCount={sessionCount}
-            loading={ordersLoading}
+
+          {/* ── Agent Communication Graph ─────────────────────────── */}
+          <AgentGraph
+            agentName={agent?.name ?? "Business"}
+            aiSafeFields={agent?.ai_safe_schema ?? []}
+            encryptedFields={agent?.encrypted_schema?.fields ?? []}
+            recentActivity={recentActivity}
           />
 
-          {/* Orders table */}
+          {/* ── Live Protocol + Network Traffic ──────────────────── */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "16px",
+              marginTop: "16px",
+            }}
+          >
+            <div style={{ minHeight: "320px" }}>
+              {agentId && <LiveProtocol agentId={agentId} />}
+            </div>
+            <div style={{ minHeight: "320px" }}>
+              {agentId && <NetworkTraffic agentId={agentId} />}
+            </div>
+          </div>
+
+          {/* ── Stat cards ───────────────────────────────────────── */}
+          <div style={{ marginTop: "24px" }}>
+            <StatCards
+              orders={orders}
+              sessionCount={sessionCount}
+              loading={ordersLoading}
+            />
+          </div>
+
+          {/* ── Orders table ─────────────────────────────────────── */}
           <div style={{ marginTop: "28px" }}>
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
@@ -234,17 +329,25 @@ function DashboardContent() {
                   <span style={{ fontSize: "7px" }}>●</span> Live
                 </span>
                 <span className="text-xs" style={{ color: "var(--muted-2)" }}>
-                  Updated {secondsAgo === 0 ? "just now" : `${secondsAgo}s ago`}
+                  Updated{" "}
+                  {secondsAgo === 0 ? "just now" : `${secondsAgo}s ago`}
                 </span>
               </div>
             </div>
-            <OrdersTable orders={orders} loading={ordersLoading} flashing={flashing} />
+            <OrdersTable
+              orders={orders}
+              loading={ordersLoading}
+              flashing={flashing}
+            />
           </div>
 
-          {/* Products table */}
+          {/* ── Product catalog ───────────────────────────────────── */}
           {agent?.products && agent.products.length > 0 && (
             <div style={{ marginTop: "28px" }}>
-              <p className="text-sm font-medium mb-3" style={{ color: "var(--text)" }}>
+              <p
+                className="text-sm font-medium mb-3"
+                style={{ color: "var(--text)" }}
+              >
                 Product Catalog
               </p>
               <div
@@ -257,41 +360,78 @@ function DashboardContent() {
               >
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
-                      {["Name", "Price", "Description", "Availability"].map((h) => (
-                        <th
-                          key={h}
-                          className="text-left text-xs uppercase tracking-widest"
-                          style={{ padding: "10px 16px", color: "var(--muted)", fontWeight: 400 }}
-                        >
-                          {h}
-                        </th>
-                      ))}
+                    <tr
+                      style={{
+                        background: "var(--surface-2)",
+                        borderBottom: "1px solid var(--border)",
+                      }}
+                    >
+                      {["Name", "Price", "Description", "Availability"].map(
+                        (h) => (
+                          <th
+                            key={h}
+                            className="text-left text-xs uppercase tracking-widest"
+                            style={{
+                              padding: "10px 16px",
+                              color: "var(--muted)",
+                              fontWeight: 400,
+                            }}
+                          >
+                            {h}
+                          </th>
+                        )
+                      )}
                     </tr>
                   </thead>
                   <tbody>
                     {agent.products.map((p, i) => (
                       <tr
                         key={i}
-                        style={{ borderBottom: i < (agent.products?.length ?? 0) - 1 ? "1px solid var(--border)" : "none" }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--surface-2)")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                        style={{
+                          borderBottom:
+                            i < (agent.products?.length ?? 0) - 1
+                              ? "1px solid var(--border)"
+                              : "none",
+                        }}
+                        onMouseEnter={(e) =>
+                          ((e.currentTarget as HTMLElement).style.background =
+                            "var(--surface-2)")
+                        }
+                        onMouseLeave={(e) =>
+                          ((e.currentTarget as HTMLElement).style.background =
+                            "transparent")
+                        }
                       >
                         <td style={{ padding: "10px 16px" }}>
-                          <span className="text-xs" style={{ color: "var(--text)" }}>{p.name}</span>
+                          <span className="text-xs" style={{ color: "var(--text)" }}>
+                            {p.name}
+                          </span>
                         </td>
                         <td style={{ padding: "10px 16px" }}>
-                          <span className="text-xs" style={{ color: "var(--text)", fontFamily: "monospace" }}>
+                          <span
+                            className="text-xs"
+                            style={{
+                              color: "var(--text)",
+                              fontFamily: "monospace",
+                            }}
+                          >
                             {p.price === 0 ? "Free" : formatCurrency(p.price)}
                           </span>
                         </td>
                         <td style={{ padding: "10px 16px" }}>
-                          <span className="text-xs" style={{ color: "var(--muted)" }}>{p.description ?? "—"}</span>
+                          <span className="text-xs" style={{ color: "var(--muted)" }}>
+                            {p.description ?? "—"}
+                          </span>
                         </td>
                         <td style={{ padding: "10px 16px" }}>
                           <span
                             className="text-xs px-2 py-0.5 rounded"
-                            style={{ background: "var(--success-bg)", border: "1px solid var(--success-border)", color: "var(--success)", fontFamily: "monospace" }}
+                            style={{
+                              background: "var(--success-bg)",
+                              border: "1px solid var(--success-border)",
+                              color: "var(--success)",
+                              fontFamily: "monospace",
+                            }}
                           >
                             In Stock
                           </span>
@@ -304,10 +444,13 @@ function DashboardContent() {
             </div>
           )}
 
-          {/* Activity log */}
+          {/* ── Activity log ─────────────────────────────────────── */}
           <div style={{ marginTop: "28px", marginBottom: "40px" }}>
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium" style={{ color: "var(--text)" }}>
+              <span
+                className="text-sm font-medium"
+                style={{ color: "var(--text)" }}
+              >
                 Agent Activity
               </span>
               <span className="text-xs" style={{ color: "var(--muted-2)" }}>
@@ -326,8 +469,13 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 44px)" }}>
-          <p style={{ color: "var(--muted)", fontSize: "13px" }}>Loading dashboard…</p>
+        <div
+          className="flex items-center justify-center"
+          style={{ minHeight: "calc(100vh - 44px)" }}
+        >
+          <p style={{ color: "var(--muted)", fontSize: "13px" }}>
+            Loading dashboard…
+          </p>
         </div>
       }
     >

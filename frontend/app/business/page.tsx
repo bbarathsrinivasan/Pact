@@ -156,6 +156,16 @@ export default function BusinessPage() {
           <div className="space-y-5">
             {STEPS.map((step, i) => {
               const status = stepStatus(i);
+              // Show scrape result on step 0 once API resolves
+              const scrapeStatus = i === 0 && apiResult?._scrape_status;
+              const scrapeColor =
+                scrapeStatus === "live"    ? "var(--success)" :
+                scrapeStatus === "url_only" ? "var(--amber)"  :
+                scrapeStatus === "fallback" ? "var(--error)"  : undefined;
+              const scrapeLabel =
+                scrapeStatus === "live"    ? "✓ live scrape" :
+                scrapeStatus === "url_only" ? "⚠ URL-only (JS site)" :
+                scrapeStatus === "fallback" ? "⚠ fallback data used" : undefined;
               return (
                 <div key={i} className="flex items-start gap-3">
                   <div className="mt-0.5 w-4 text-center">
@@ -165,17 +175,34 @@ export default function BusinessPage() {
                     <div className="flex items-center justify-between">
                       <span
                         className="text-sm"
-                        style={{
-                          color: status === "waiting" ? "var(--muted-2)" : "var(--text)",
-                        }}
+                        style={{ color: status === "waiting" ? "var(--muted-2)" : "var(--text)" }}
                       >
                         {step.label}
                       </span>
-                      <StepBadge status={status} />
+                      <div className="flex items-center gap-2">
+                        {scrapeLabel && (
+                          <span
+                            style={{
+                              fontFamily: "monospace",
+                              fontSize: "10px",
+                              color: scrapeColor,
+                            }}
+                          >
+                            {scrapeLabel}
+                          </span>
+                        )}
+                        <StepBadge status={status} />
+                      </div>
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "var(--muted-2)" }}>
                       {step.sub(url)}
                     </p>
+                    {/* Show extracted name once API resolves on step 1 (classify) */}
+                    {i === 1 && apiResult?.name && (
+                      <p className="text-xs mt-1" style={{ color: "var(--success)", fontFamily: "monospace" }}>
+                        ✓ {apiResult.name} — {apiResult.ai_safe_schema?.length ?? 0} AI-safe, {apiResult.encrypted_schema?.fields?.length ?? 0} encrypted fields
+                      </p>
+                    )}
                   </div>
                 </div>
               );

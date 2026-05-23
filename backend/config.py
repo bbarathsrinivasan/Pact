@@ -14,4 +14,8 @@ REGISTRY_PATH = BASE_DIR / "data" / "registry.json"
 USER_CONTEXT_PATH = BASE_DIR / "data" / "user_context.md"
 ENCRYPTED_STORE_PATH = BASE_DIR / "data" / "encrypted_store.json"
 
-GEMINI_MODEL = "gemini-2.0-flash"
+# Gemini 3.5 Flash — used by Creator agent, Builder agent, Business assistant
+GEMINI_MODEL = "gemini-2.5-flash-preview-05-20"
+
+# Antigravity — web-browsing scraper model used exclusively by the Scraper agent
+SCRAPER_MODEL = "antigravity-preview-05-2026"

@@ -1,6 +1,6 @@
-import sqlite3
+import json
 import random
-import string
+import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -10,6 +10,7 @@ DB_PATH = Path(__file__).parent / "data" / "pact.db"
 def get_conn() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")   # concurrent reads + writes
     return conn
 
 
@@ -43,9 +44,20 @@ def init_db() -> None:
             started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS sessions (
+            id TEXT PRIMARY KEY,
+            state TEXT NOT NULL DEFAULT 'idle',
+            data TEXT NOT NULL DEFAULT '{}',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
     """)
     conn.commit()
     conn.close()
+
+
+# ── Order helpers ──────────────────────────────────────────────────────────────
 
 
 def _gen_order_id() -> str:
@@ -85,6 +97,9 @@ def create_order(data: dict) -> dict:
     return dict(row)
 
 
+# ── Activity helpers ───────────────────────────────────────────────────────────
+
+
 def log_activity(data: dict) -> None:
     conn = get_conn()
     conn.execute(
@@ -111,6 +126,9 @@ def get_activity(agent_id: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+# ── Session helpers (agent_sessions = A2A session tracking) ───────────────────
+
+
 def count_sessions(agent_id: str) -> int:
     conn = get_conn()
     row = conn.execute(
@@ -130,13 +148,88 @@ def register_session(session_id: str, agent_id: str) -> None:
     conn.close()
 
 
+# ── Persistent personal-agent sessions ────────────────────────────────────────
+
+
+def save_session(session_id: str, state: str, data: dict) -> None:
+    """Upsert a personal agent session to SQLite."""
+    conn = get_conn()
+    now = datetime.now().isoformat()
+    conn.execute(
+        """INSERT INTO sessions (id, state, data, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE
+           SET state = excluded.state,
+               data  = excluded.data,
+               updated_at = excluded.updated_at""",
+        (session_id, state, json.dumps(data), now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def load_session(session_id: str) -> dict | None:
+    """Load a session row. Returns dict with 'state' and 'data' (dict), or None."""
+    conn = get_conn()
+    row = conn.execute(
+        "SELECT state, data FROM sessions WHERE id = ?", (session_id,)
+    ).fetchone()
+    conn.close()
+    if not row:
+        return None
+    return {"state": row["state"], "data": json.loads(row["data"])}
+
+
+def delete_session(session_id: str) -> None:
+    conn = get_conn()
+    conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+    conn.commit()
+    conn.close()
+
+
+def get_history(limit: int = 30) -> list[dict]:
+    """Return recent personal agent sessions (complete + cancelled) for history tab."""
+    conn = get_conn()
+    rows = conn.execute(
+        """SELECT id, state, data, created_at, updated_at
+           FROM sessions
+           WHERE state IN ('complete', 'cancelled')
+           ORDER BY updated_at DESC
+           LIMIT ?""",
+        (limit,),
+    ).fetchall()
+    conn.close()
+
+    results = []
+    for row in rows:
+        data = json.loads(row["data"] or "{}")
+        intent_obj = data.get("intent") or {}
+        results.append({
+            "session_id":    row["id"],
+            "state":         row["state"],
+            "agent_name":    data.get("agent_name", "Unknown Agent"),
+            "agent_id":      data.get("agent_id", ""),
+            "intent":        intent_obj.get("intent", ""),
+            "business_type": intent_obj.get("business_type", ""),
+            "ai_safe_fields":list((data.get("ai_safe_data") or {}).keys()),
+            "enc_fields":    list((data.get("pii_data") or {}).keys()),
+            "created_at":    row["created_at"],
+            "completed_at":  row["updated_at"],
+        })
+    return results
+
+
+# ── Seed data ──────────────────────────────────────────────────────────────────
+
+
 def seed_agent_data(agent_id: str, agent_card: dict) -> None:
-    products = agent_card.get("products", [
+    """Seed realistic mock orders and activity on first onboard."""
+    products = agent_card.get("products") or [
         {"name": "Table Reservation", "price": 0.0},
         {"name": "Private Dining Experience", "price": 150.0},
         {"name": "Tasting Menu", "price": 95.0},
         {"name": "Wine Pairing", "price": 45.0},
-    ])
+    ]
 
     statuses = ["confirmed", "processing", "completed", "confirmed", "processing"]
     speeds = ["standard", "express", "standard", "overnight", "standard"]
@@ -155,19 +248,21 @@ def seed_agent_data(agent_id: str, agent_card: dict) -> None:
             """INSERT OR IGNORE INTO orders
                (id, agent_id, product, quantity, total, delivery_speed, status, created_at)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (order_id, agent_id, product.get("name", "Reservation"),
-             qty, total, speeds[i], statuses[i], created_at),
+            (
+                order_id, agent_id, product.get("name", "Reservation"),
+                qty, total, speeds[i], statuses[i], created_at,
+            ),
         )
 
     events = [
-        ("handshake_initiated", "Personal agent connected", None, 48),
-        ("field_classified",    "date, party_size → AI-safe", None, 47),
-        ("field_classified",    "email, phone → encrypted",   None, 47),
-        ("ai_safe_sent",        "Sent date, party_size to assistant", "ai_safe",   46),
-        ("encrypted_direct",    "full_name bypassed AI",   "encrypted", 46),
-        ("encrypted_direct",    "email bypassed AI",       "encrypted", 45),
-        ("encrypted_direct",    "phone bypassed AI",       "encrypted", 45),
-        ("order_confirmed",     "Reservation completed",   "ai_safe",   44),
+        ("handshake_initiated", "Personal agent connected via A2A",   None,        48),
+        ("field_classified",    "date, party_size → AI-safe",         None,        47),
+        ("field_classified",    "email, phone → encrypted (AES-256)", None,        47),
+        ("ai_safe_sent",        "AI-safe fields sent to assistant",   "ai_safe",   46),
+        ("encrypted_direct",    "full_name bypassed AI — encrypted",  "encrypted", 46),
+        ("encrypted_direct",    "email bypassed AI — encrypted",      "encrypted", 45),
+        ("encrypted_direct",    "phone bypassed AI — encrypted",      "encrypted", 45),
+        ("order_confirmed",     "Booking confirmed end-to-end",       "ai_safe",   44),
     ]
     for event, details, privacy_type, hours_ago in events:
         created_at = (datetime.now() - timedelta(hours=hours_ago)).isoformat()

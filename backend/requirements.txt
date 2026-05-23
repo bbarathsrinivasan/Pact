@@ -1,7 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 cryptography
-google-genai
+google-genai>=0.8.0
 pydantic
 httpx
