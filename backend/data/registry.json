@@ -225,73 +225,6 @@
     "_thoughts": "**My Thought Process: Crafting the Mamaearth Agent Card**\n\nOkay, here's the breakdown. The goal is clear: a JSON agent card for Mamaearth. I need to make sure this meets the specifications.\n\nFirst, I parsed the provided information. We have the business name (Mamaearth), a description of their products, and, crucially, a list of AI-safe and encrypted fields. This is key. I need to be *very* mindful of what the AI can and can't see.\n\nNext, it's capability time. I translated Mamaearth's offerings into concise, actionable phrases. I have to make sure they're focused on actions and cover the core functionality: browsing, ordering, and managing cart items, which translates to selecting quantities and sizes. I did a bit of refinement to make sure everything lines up. I ended up with: \"browse natural hair, skin, and baby care products\", \"select product quantities and sizes\", and \"process orders for toxin-free personal care items\".\n\nThen, the privacy note. This is essential for user trust. I need to clearly state what's encrypted and what's processed by the AI. It's concise and explains exactly what's being safeguarded.\n\nFinally, the agent description. This needs to be compelling and highlight the value proposition. I framed it as a helpful assistant that makes finding and ordering Mamaearth's products easy. I made sure to convey the emphasis on safety, natural ingredients, and the toxin-free nature of the goods.\n\nNow, before the JSON, I needed to double-check: capabilities are concise active phrases; the privacy note is a clear sentence; the agent description is compelling. I updated the capabilities based on the latest revisions. Everything is formatted correctly, and all the required components are there and the output JSON is:\n\n```json\n{\n  \"capabilities\": [\n    \"browse natural personal care products\",\n    \"configure product sizes and quantities\",\n    \"process orders for toxin-free cosmetics and skincare\"\n  ],\n  \"privacy_note\": \"Customer personal and payment details are fully encrypted to bypass the AI entirely, while product details like quantity and size are securely shared with the AI to process your request.\",\n  \"agent_description\": \"Mamaearth offers safe, natural, and toxin-free baby, skin, and hair care products. This assistant helps you browse and order gentle, effective personal care essentials seamlessly.\"\n}\n```",
     "_thought_summary": "**My Thought Process: Crafting the Mamaearth Agent Card**\n\nOkay, here's the breakdown. The goal is clear: a JSON agent card for Mamaearth. I need to make sure this meets the specifications.\n\nFirst, I parsed the provided information. We have the business name (Mamaearth), a description of their products, and, crucially, a list of AI-safe and encrypted fields. This is key. I need to be *very* mindful of what the AI can and can't see.\n\nNext, it's capability time. I translated Mamaearth's offerings \u2026"
   },
-  "pact://boat-lifestyle": {
-    "id": "pact://boat-lifestyle",
-    "type": "business",
-    "name": "boAt Lifestyle",
-    "description": "boAt Lifestyle is an AI assistant designed to help you browse and purchase premium wireless audio products, smartwatches, and lifestyle accessories. It offers a seamless shopping experience by facilitating product customization and secure order processing.",
-    "capabilities": [
-      "browse wireless audio products",
-      "configure product specifications",
-      "process consumer electronics orders"
-    ],
-    "privacy_note": "Personal identity and payment details are securely encrypted to bypass the AI, while product selections, quantities, and colors are safely processed by Gemini to manage your order.",
-    "ai_safe_schema": [
-      "product",
-      "quantity",
-      "color"
-    ],
-    "encrypted_schema": {
-      "fields": [
-        "full_name",
-        "email",
-        "phone",
-        "address",
-        "card_number",
-        "cvv",
-        "card_expiry"
-      ],
-      "endpoint": "/secure/submit/boat-lifestyle",
-      "method": "POST",
-      "encryption": "AES-256-Fernet"
-    },
-    "products": [
-      {
-        "name": "boAt Rockerz 412",
-        "price": 1599,
-        "description": "Wireless headphones with 40mm Drivers, BEAST\u2122 Mode, ENx\u2122 Tech & 60H Playback."
-      },
-      {
-        "name": "boAt Rockerz 413",
-        "price": 1599,
-        "description": "Wireless headphones with 60ms Low Latency, ENx\u2122 Technology, and 40mm Drivers."
-      },
-      {
-        "name": "boAt Rockerz Plus 550",
-        "price": 2299,
-        "description": "Over-ear headphones with 50mm Drivers, boAt Signature Sound, and Dual Compatibility."
-      },
-      {
-        "name": "boAt Rockerz 650 Pro",
-        "price": 3099,
-        "description": "Wireless headphones featuring Dolby Audio, ENx\u2122 Tech, and Touch & Swipe Controls."
-      },
-      {
-        "name": "boAt Rockerz 430",
-        "price": 1499,
-        "description": "Wireless headphones with BEAST\u2122 Mode, Bluetooth v5.4, and 40 hours of playback."
-      },
-      {
-        "name": "boAt Airdopes 161",
-        "price": 1099,
-        "description": "Personalized True Wireless Earbuds with ASAP\u2122 Charge, IWP Technology, and engraving options."
-      }
-    ],
-    "source_url": "https://www.boat-lifestyle.com/collections/bluetooth-wireless-headphones?srsltid=AfmBOop8QsrX8OrAJs1cNOxMkpL7sEYsEH6lqX3I3UEH6AN5dkzD9iQB",
-    "registered_at": "2026-05-23T15:52:25.392872",
-    "_thoughts": "**My Thought Process: Generating the boAt Lifestyle AI Agent JSON**\n\nOkay, the goal is clear: I need to create a JSON card for an AI agent representing \"boAt Lifestyle,\" adhering to the provided specifications and, critically, returning *only* valid JSON. No explanations, no markdown \u2013 just the data. I'm taking this in steps.\n\nFirst, I reviewed the input data. I have the business name (\"boAt Lifestyle\"), its description, AI-safe and encrypted fields, and a list of their products. This gives me everything needed to create the agent.\n\nNext, I need to define the agent's capabilities. I brainstormed some active verb-noun phrases that reflect what this agent should *do*. I started with ideas like \"Browse wireless audio products and smartwatches\", \"Select product color and quantity\", and \"Process orders for boAt products\", and refined these down to: \"browse wireless audio products,\" \"configure product specifications,\" and \"process customer orders\". These seem like a good, concise representation of what the agent will handle.\n\nThe privacy note is next, crucial for security. I drafted a clear, one-sentence explanation of what gets encrypted and what the AI has access to. My draft: \"Personal information and payment details are strictly encrypted to bypass the AI, while only order-specific details like product, quantity, and color are processed by Gemini.\" I confirmed that this accurately addresses the key requirements.\n\nThen I needed an agent description. I need to be better than just copying the raw input. I constructed a 1-2 sentence description that paints the picture of a seamless shopping experience. My thought is: \"boAt Lifestyle is an interactive assistant that helps users explore and purchase affordable, high-quality wireless audio products and smartwatches. It streamlines the shopping experience by handling product customization and secure order placement.\"\n\nNow for the JSON structure. I made sure to include only the specified keys: `capabilities`, `privacy_note`, and `agent_description`. I've created the JSON structure:\n\n```json\n{\n  \"capabilities\": [\n    \"browse wireless audio products\",\n    \"configure product specifications\",\n    \"process consumer electronics orders\"\n  ],\n  \"privacy_note\": \"Personal information and payment details are strictly encrypted to bypass the AI, while only order-specific details like product, quantity, and color are processed by Gemini.\",\n  \"agent_description\": \"boAt Lifestyle is an interactive assistant that helps users explore and purchase affordable, high-quality wireless audio products and smartwatches. It streamlines the shopping experience by handling product customization and secure order placement.\"\n}\n```\n\nI double-checked: is it valid JSON? Yes. Does it fulfill all the criteria? Yes.\n\nFinally, remembering the instructions, \"Return ONLY valid JSON \u2014 no markdown, no explanation\", I must now output the JSON string without the ```json fence.",
-    "_thought_summary": "**My Thought Process: Generating the boAt Lifestyle AI Agent JSON**\n\nOkay, the goal is clear: I need to create a JSON card for an AI agent representing \"boAt Lifestyle,\" adhering to the provided specifications and, critically, returning *only* valid JSON. No explanations, no markdown \u2013 just the data. I'm taking this in steps.\n\nFirst, I reviewed the input data. I have the business name (\"boAt Lifestyle\"), its description, AI-safe and encrypted fields, and a list of their products. This gives me e\u2026"
-  },
   "pact://localhost-store": {
     "id": "pact://localhost-store",
     "type": "business",
@@ -349,5 +282,78 @@
     "registered_at": "2026-05-23T16:13:05.038219",
     "_thoughts": "**My Thought Process: Crafting the Localhost Store AI Agent Card**\n\nOkay, so the task is to generate a JSON representation for an AI agent card, specifically for \"Localhost Store\". I've got the necessary information: the business name, description, AI-safe and encrypted fields, and the offered products. My job is to translate this information into the required format.\n\nFirst, I need to come up with some capability phrases. They need to be active, verb-noun combinations. I brainstormed a few, \"browse premium apparel and gear\", \"customize product options like size and color\", and \"process secure orders for developer merchandise\". I refined them to be even clearer: \"browse developer apparel and gear\", \"configure product sizes and colors\", and \"process secure merchandise orders\". Perfect, those three phrases are clear, concise, and effectively capture what the AI agent *does*.\n\nNext, I have to formulate the privacy note. This requires a specific explanation of what the AI processes versus what's encrypted. I drafted: \"Your product selections, quantities, sizes, and colors are processed directly by the AI, while all personal contact and payment details are fully encrypted to bypass the AI entirely.\" Let me refine that to be even more succinct, while conveying the same information: \"Your product specifications like size and color are processed by the AI, while sensitive personal and payment information is completely encrypted to ensure your privacy.\" Much better.\n\nThe agent description needs to be an enhanced version of the provided description. The original is: \"An exclusive online storefront offering premium apparel, accessories, and gear designed for developers and creators.\" Let's build upon this to sound more engaging, and capture the store's essence. How about: \"Localhost Store is a premium online storefront offering exclusive apparel, high-quality accessories, and tech gear designed specifically for developers and creators.\" This better reflects the focus on quality and exclusivity.\n\nNow, I'm ready to assemble the JSON. The format is straightforward: three keys \u2013 `capabilities`, `privacy_note`, and `agent_description`. I'll put my prepared phrases into the correct structure. I'll construct and validate this JSON:\n\n```json\n{\n  \"capabilities\": [\n    \"browse developer apparel and gear\",\n    \"configure product sizes and colors\",\n    \"process secure merchandise orders\"\n  ],\n  \"privacy_note\": \"Your product specifications like size and color are processed by the AI, while sensitive personal and payment information is completely encrypted to ensure your privacy.\",\n  \"agent_description\": \"Localhost Store is a premium online storefront offering exclusive apparel, high-quality accessories, and tech gear designed specifically for developers and creators.\"\n}\n```\n\nOkay, the JSON looks good, all constraints satisfied. I've double-checked that it's valid JSON format, and most importantly, it's *only* JSON, no markdown. I'm ready to submit it.",
     "_thought_summary": "**My Thought Process: Crafting the Localhost Store AI Agent Card**\n\nOkay, so the task is to generate a JSON representation for an AI agent card, specifically for \"Localhost Store\". I've got the necessary information: the business name, description, AI-safe and encrypted fields, and the offered products. My job is to translate this information into the required format.\n\nFirst, I need to come up with some capability phrases. They need to be active, verb-noun combinations. I brainstormed a few, \"br\u2026"
+  },
+  "pact://boat-lifestyle": {
+    "id": "pact://boat-lifestyle",
+    "type": "business",
+    "name": "boAt Lifestyle",
+    "description": "Shop the latest boAt Lifestyle audio gear and smartwatches through a seamless, interactive assistant designed to help you find trendy and affordable electronics.",
+    "capabilities": [
+      "browse audio and wearable products",
+      "configure order specifications",
+      "process secure purchases"
+    ],
+    "privacy_note": "Your personal data and payment details are fully encrypted to bypass the AI entirely, while product selections, quantities, and colors are safely processed to complete your order.",
+    "ai_safe_schema": [
+      "product",
+      "quantity",
+      "color"
+    ],
+    "encrypted_schema": {
+      "fields": [
+        "full_name",
+        "email",
+        "phone",
+        "address",
+        "payment_method",
+        "card_number",
+        "cvv",
+        "card_expiry"
+      ],
+      "endpoint": "/secure/submit/boat-lifestyle",
+      "method": "POST",
+      "encryption": "AES-256-Fernet"
+    },
+    "products": [
+      {
+        "name": "boAt Rockerz 412",
+        "price": 1599,
+        "description": "Wireless headphones featuring 60 hours playback, BEAST Mode, and ENx Technology."
+      },
+      {
+        "name": "boAt Rockerz 413",
+        "price": 1599,
+        "description": "Wireless headphones with 60ms low latency, ENx Technology, and 40mm drivers."
+      },
+      {
+        "name": "boAt Rockerz Plus 550",
+        "price": 2299,
+        "description": "Over-ear wireless headphones with 50mm drivers and dual compatibility (Bluetooth + AUX)."
+      },
+      {
+        "name": "boAt Rockerz 650 Pro",
+        "price": 3099,
+        "description": "Premium wireless headphones with Dolby Audio and touch & swipe controls."
+      },
+      {
+        "name": "boAt Rockerz 430",
+        "price": 1499,
+        "description": "Affordable wireless headphones with Bluetooth v5.4 and 40 hours of playback."
+      },
+      {
+        "name": "boAt Airdopes 161",
+        "price": 1099,
+        "description": "True wireless earbuds with 40 hours of playback and ASAP Charge technology."
+      },
+      {
+        "name": "boAt Chrome Ivory",
+        "price": 4499,
+        "description": "Stylish smartwatch featuring an AMOLED display."
+      }
+    ],
+    "source_url": "https://www.boat-lifestyle.com/collections/bluetooth-wireless-headphones?srsltid=AfmBOoqss_d7rwK-jn-Ef7k_JqgE3agL6kcQQqsmUgymcKdrXjbxcge9",
+    "registered_at": "2026-05-23T16:53:47.665672",
+    "_thoughts": "**My Thought Process: Crafting the boAt Lifestyle Agent Card**\n\nOkay, here's how I'm approaching this: First, I need to create a JSON agent card for \"boAt Lifestyle.\" The instructions are clear \u2013 JSON only, no markdown, and specific keys: `capabilities`, `privacy_note`, and `agent_description`. I've broken this down into logical steps.\n\nI've examined the inputs closely: the business name, description, which fields are AI-safe, which are encrypted, and some example products.  My priority is accuracy and compliance.\n\nNext, the *capabilities*.  I'm focusing on active verb-noun phrases that reflect what a customer might do with boAt's products. I started with a draft like \"browse consumer electronics\" and then refined it to sound more relevant to boAt (e.g., \"browse audio and wearable products,\" \"configure order specifications,\" \"process secure purchases\").  I need three capabilities in the output, and I am careful to keep it in a suitable business context.\n\nFor the `privacy_note`, I must clearly explain what's encrypted for security and what's safe for AI processing. I've phrased it to ensure this separation is clear to the user. I chose: \"Your personal data and payment details are fully encrypted to bypass the AI entirely, while product selections, quantities, and colors are safely processed to complete your order.\"\n\nThe `agent_description` is next. It needs to be enhanced, so I\u2019m aiming for a concise description that highlights the ease of shopping for boAt products. I've drafted \"Shop the latest boAt Lifestyle audio gear and smartwatches through a seamless, interactive assistant designed to help you find trendy and affordable electronics.\"\n\nFinally, the JSON output. I'm double-checking the structure and content to make sure it adheres to all the constraints. It has to be valid JSON *only*, so no external formatting or explanations. This means the output is literally `{ ... }` without any ```json ``` wrappers. I am confident that the provided JSON meets all requirements. Now I'm ready to output.",
+    "_thought_summary": "**My Thought Process: Crafting the boAt Lifestyle Agent Card**\n\nOkay, here's how I'm approaching this: First, I need to create a JSON agent card for \"boAt Lifestyle.\" The instructions are clear \u2013 JSON only, no markdown, and specific keys: `capabilities`, `privacy_note`, and `agent_description`. I've broken this down into logical steps.\n\nI've examined the inputs closely: the business name, description, which fields are AI-safe, which are encrypted, and some example products.  My priority is accur\u2026"
   }
 }

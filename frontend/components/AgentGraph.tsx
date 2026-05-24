@@ -26,6 +26,19 @@ const C = {
   surface:   "#111111",
 };
 
+// Point on circle edge toward a target
+function nodeEdge(
+  node: { cx: number; cy: number; r: number },
+  target: { x: number; y: number },
+) {
+  const dx = target.x - node.cx;
+  const dy = target.y - node.cy;
+  const len = Math.hypot(dx, dy) || 1;
+  return {
+    x: node.cx + (dx / len) * node.r,
+    y: node.cy + (dy / len) * node.r,
+  };
+}
 // Animated particle along a path
 function Particle({
   pathId, color, dur, delay,
@@ -81,12 +94,37 @@ export default function AgentGraph({
   const hasEnc     = encryptedFields.length > 0;
   const busLabel   = agentName.length > 10 ? agentName.slice(0, 9) + "…" : agentName;
 
-  // Path definitions — referenced by ID for animateMotion
+  // Layout: trust boundary encloses Gemini + all AI-safe field labels
+  const PERSONAL = { cx: 90, cy: 157, r: 30 };
+  const BUSINESS = { cx: 726, cy: 92, r: 26 };
+  const SECURE = { cx: 726, cy: 228, r: 24 };
+  const GEMINI = { cx: 374, cy: 108, rInner: 26, rGlow: 32 };
+  const boundary = { x: 284, y: 52, w: 180, h: 142 };
+  const boundaryBottom = boundary.y + boundary.h;
+  const encLaneY = boundaryBottom + 40;
+  const laneDividerY = boundaryBottom + 26;
+
+  const geminiLeft = { x: GEMINI.cx - GEMINI.rGlow, y: GEMINI.cy };
+  const geminiRight = { x: GEMINI.cx + GEMINI.rGlow, y: GEMINI.cy };
+
+  const personalAiStart = nodeEdge(PERSONAL, geminiLeft);
+  const businessAiEnd = nodeEdge(BUSINESS, geminiRight);
+  const personalEncStart = nodeEdge(PERSONAL, { x: SECURE.cx, y: SECURE.cy });
+  const secureEncEnd = nodeEdge(SECURE, { x: PERSONAL.cx, y: PERSONAL.cy });
+
+  // Paths anchored to node edges
   const paths = {
-    p_ai1: "M 128 148 C 190 148 248 148 278 148",
-    p_ai2: "M 448 138 C 545 118 638 98 698 92",
-    p_enc: "M 128 166 C 230 216 538 236 698 228",
+    p_ai1: `M ${personalAiStart.x} ${personalAiStart.y} C ${personalAiStart.x + 55} ${personalAiStart.y - 18} ${geminiLeft.x - 45} ${GEMINI.cy} ${geminiLeft.x} ${GEMINI.cy}`,
+    p_ai2: `M ${geminiRight.x} ${GEMINI.cy} C ${geminiRight.x + 85} ${GEMINI.cy - 10} ${businessAiEnd.x - 75} ${businessAiEnd.y} ${businessAiEnd.x} ${businessAiEnd.y}`,
+    p_enc: `M ${personalEncStart.x} ${personalEncStart.y} C ${personalEncStart.x + 90} ${encLaneY} ${secureEncEnd.x - 110} ${encLaneY} ${secureEncEnd.x} ${secureEncEnd.y}`,
   };
+
+  const visibleFields = aiSafeFields.slice(0, 8);
+  const fieldLineH = 10;
+  const fieldCols = visibleFields.length > 4 ? 2 : 1;
+  const fieldColGap = 76;
+  // Start field list below Gemini glow + label
+  const fieldStartY = GEMINI.cy + GEMINI.rGlow + 14;
 
   return (
     <div
@@ -141,7 +179,7 @@ export default function AgentGraph({
       `}</style>
 
       <svg
-        viewBox="0 0 820 295"
+        viewBox="0 0 820 320"
         style={{ width: "100%", height: "auto", display: "block" }}
         key={tick}
       >
@@ -170,22 +208,58 @@ export default function AgentGraph({
           </radialGradient>
         </defs>
 
-        {/* ── Trust boundary ─────────────────────────────────────────── */}
+        {/* ── Trust boundary (AI-safe lane only) ───────────────────────── */}
         <rect
-          x="266" y="48" width="216" height="196" rx="10"
+          x={boundary.x}
+          y={boundary.y}
+          width={boundary.w}
+          height={boundary.h}
+          rx="10"
           fill="url(#gGemini)"
           stroke={C.boundary}
           strokeWidth="1"
           strokeDasharray="7 3"
           style={{ animation: "boundaryPulse 3s ease-in-out infinite" }}
         />
-        <text x="282" y="44" fontSize="8.5" fill={C.boundary} fontFamily="monospace"
-              style={{ letterSpacing: "2px", animation: "boundaryPulse 3s ease-in-out infinite" }}>
+        <text
+          x={boundary.x + 8}
+          y={boundary.y - 6}
+          fontSize="8.5"
+          fill={C.boundary}
+          fontFamily="monospace"
+          style={{ letterSpacing: "2px", animation: "boundaryPulse 3s ease-in-out infinite" }}
+        >
           AI TRUST BOUNDARY
         </text>
-        <text x="278" y="234" fontSize="7.5" fill={C.boundary} fontFamily="monospace" opacity="0.55">
-          Gemini 3.5 Flash — never sees PII
+        <text
+          x={boundary.x + boundary.w - 10}
+          y={boundary.y + 14}
+          textAnchor="end"
+          fontSize="6.5"
+          fill={C.boundary}
+          fontFamily="monospace"
+          opacity="0.55"
+        >
+          Gemini 3.5 Flash — AI-safe only
         </text>
+
+        {/* Lane separator — encrypted route stays outside boundary */}
+        {hasEnc && (
+          <>
+            <line
+              x1="118"
+              y1={laneDividerY}
+              x2="702"
+              y2={laneDividerY}
+              stroke="#1f1f1f"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+            />
+            <text x="118" y={laneDividerY + 14} fontSize="7" fill="#525252" fontFamily="monospace">
+              outside AI boundary ↓
+            </text>
+          </>
+        )}
 
         {/* ── AI-safe path ────────────────────────────────────────────── */}
         {hasAiSafe && (
@@ -198,12 +272,12 @@ export default function AgentGraph({
             <Particle pathId="p_ai2" color={C.aiSafe} dur={1.9} delay={0.9}  />
             <Particle pathId="p_ai2" color={C.aiSafe} dur={1.9} delay={1.6}  />
 
-            {/* Pill label */}
-            <rect x="148" y="128" width="72" height="14" rx="3" fill="rgba(0,0,0,0.85)" />
-            <text x="151" y="138.5" fontSize="8" fill={C.aiSafe} fontFamily="monospace">
+            {/* Pill label — upper AI-safe lane */}
+            <rect x={personalAiStart.x + 18} y={GEMINI.cy - 12} width="72" height="14" rx="3" fill="rgba(0,0,0,0.85)" />
+            <text x={personalAiStart.x + 21} y={GEMINI.cy - 1.5} fontSize="8" fill={C.aiSafe} fontFamily="monospace">
               AI-safe data
             </text>
-            <text x="470" y="110" fontSize="8" fill={C.aiSafe} fontFamily="monospace">
+            <text x="470" y="100" fontSize="8" fill={C.aiSafe} fontFamily="monospace">
               ▸ confirmed
             </text>
           </>
@@ -217,9 +291,9 @@ export default function AgentGraph({
             <Particle pathId="p_enc" color={C.encrypted} dur={2.4} delay={0.8} />
             <Particle pathId="p_enc" color={C.encrypted} dur={2.4} delay={1.6} />
 
-            {/* Bypass label */}
-            <rect x="310" y="240" width="106" height="14" rx="3" fill="rgba(0,0,0,0.85)" />
-            <text x="313" y="250.5" fontSize="8" fill={C.encrypted} fontFamily="monospace">
+            {/* Bypass label — lower lane, clear of boundary box */}
+            <rect x="380" y={encLaneY + 10} width="106" height="14" rx="3" fill="rgba(0,0,0,0.85)" />
+            <text x="383" y={encLaneY + 20.5} fontSize="8" fill={C.encrypted} fontFamily="monospace">
               🔒 encrypted bypass
             </text>
           </>
@@ -228,64 +302,111 @@ export default function AgentGraph({
         {/* ── NODES ───────────────────────────────────────────────────── */}
 
         {/* Personal Agent */}
-        <circle cx="90" cy="157" r="50" fill="url(#gPersonal)"
+        <circle cx={PERSONAL.cx} cy={PERSONAL.cy} r="50" fill="url(#gPersonal)"
                 style={{ animation: "gNodePulse 3.5s ease-in-out infinite" }} />
-        <circle cx="90" cy="157" r="30" fill="#0e0e0e" stroke={C.personal} strokeWidth="1.5"
+        <circle cx={PERSONAL.cx} cy={PERSONAL.cy} r={PERSONAL.r} fill="#0e0e0e" stroke={C.personal} strokeWidth="1.5"
                 style={{ filter: `drop-shadow(0 0 8px ${C.personal}88)` }} />
-        <text x="90" y="153" textAnchor="middle" fontSize="15" fill={C.personal}>◈</text>
-        <text x="90" y="165" textAnchor="middle" fontSize="7.5" fill={C.personal} fontFamily="monospace">Personal</text>
-        <text x="90" y="175" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Agent</text>
+        <text x={PERSONAL.cx} y={PERSONAL.cy - 4} textAnchor="middle" fontSize="15" fill={C.personal}>◈</text>
+        <text x={PERSONAL.cx} y={PERSONAL.cy + 8} textAnchor="middle" fontSize="7.5" fill={C.personal} fontFamily="monospace">Personal</text>
+        <text x={PERSONAL.cx} y={PERSONAL.cy + 18} textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Agent</text>
 
-        {/* Gemini */}
-        <circle cx="374" cy="146" r="58" fill="url(#gGemini)"
-                style={{ animation: "geminiPulse 2.5s ease-in-out infinite" }} />
-        <circle cx="374" cy="146" r="34" fill="#0c0c0e" stroke={C.gemini} strokeWidth="1.5"
-                style={{ filter: `drop-shadow(0 0 12px ${C.gemini}99)` }} />
-        <text x="374" y="140" textAnchor="middle" fontSize="18" fill={C.gemini}>⬡</text>
-        <text x="374" y="154" textAnchor="middle" fontSize="7.5" fill={C.gemini} fontFamily="monospace">Gemini</text>
-        <text x="374" y="164" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">3.5 Flash</text>
+        {/* Gemini — fully inside trust boundary */}
+        <circle
+          cx={GEMINI.cx}
+          cy={GEMINI.cy}
+          r={GEMINI.rGlow}
+          fill="url(#gGemini)"
+          style={{ animation: "geminiPulse 2.5s ease-in-out infinite" }}
+        />
+        <circle
+          cx={GEMINI.cx}
+          cy={GEMINI.cy}
+          r={GEMINI.rInner}
+          fill="#0c0c0e"
+          stroke={C.gemini}
+          strokeWidth="1.5"
+          style={{ filter: `drop-shadow(0 0 12px ${C.gemini}99)` }}
+        />
+        <text x={GEMINI.cx} y={GEMINI.cy - 6} textAnchor="middle" fontSize="16" fill={C.gemini}>⬡</text>
+        <text x={GEMINI.cx} y={GEMINI.cy + 6} textAnchor="middle" fontSize="7.5" fill={C.gemini} fontFamily="monospace">Gemini</text>
+        <text x={GEMINI.cx} y={GEMINI.cy + 16} textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">3.5 Flash</text>
+
+        {/* Divider between Gemini node and AI-safe field list */}
+        {visibleFields.length > 0 && (
+          <line
+            x1={boundary.x + 14}
+            y1={fieldStartY - 6}
+            x2={boundary.x + boundary.w - 14}
+            y2={fieldStartY - 6}
+            stroke={C.boundary}
+            strokeWidth="0.5"
+            opacity="0.25"
+          />
+        )}
 
         {/* Business Agent */}
-        <circle cx="726" cy="92" r="42" fill="url(#gBusiness)"
+        <circle cx={BUSINESS.cx} cy={BUSINESS.cy} r="42" fill="url(#gBusiness)"
                 style={{ animation: "gNodePulse 4s ease-in-out infinite" }} />
-        <circle cx="726" cy="92" r="26" fill="#0e0e0e" stroke={C.business} strokeWidth="1.5"
+        <circle cx={BUSINESS.cx} cy={BUSINESS.cy} r={BUSINESS.r} fill="#0e0e0e" stroke={C.business} strokeWidth="1.5"
                 style={{ filter: `drop-shadow(0 0 8px ${C.business}88)` }} />
-        <text x="726" y="87" textAnchor="middle" fontSize="13" fill={C.business}>◈</text>
-        <text x="726" y="99" textAnchor="middle" fontSize="7.5" fill={C.business} fontFamily="monospace">{busLabel}</text>
-        <text x="726" y="109" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Business</text>
+        <text x={BUSINESS.cx} y={BUSINESS.cy - 5} textAnchor="middle" fontSize="13" fill={C.business}>◈</text>
+        <text x={BUSINESS.cx} y={BUSINESS.cy + 7} textAnchor="middle" fontSize="7.5" fill={C.business} fontFamily="monospace">{busLabel}</text>
+        <text x={BUSINESS.cx} y={BUSINESS.cy + 17} textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Business</text>
 
         {/* Secure Endpoint */}
-        <circle cx="726" cy="228" r="38" fill="url(#gSecure)"
+        <circle cx={SECURE.cx} cy={SECURE.cy} r="38" fill="url(#gSecure)"
                 style={{ animation: "gNodePulse 3s ease-in-out infinite 0.5s" }} />
-        <circle cx="726" cy="228" r="24" fill="#0e0e0e" stroke={C.secure} strokeWidth="1.5"
+        <circle cx={SECURE.cx} cy={SECURE.cy} r={SECURE.r} fill="#0e0e0e" stroke={C.secure} strokeWidth="1.5"
                 style={{ filter: `drop-shadow(0 0 8px ${C.secure}88)` }} />
-        <text x="726" y="222" textAnchor="middle" fontSize="15" fill={C.secure}>🔒</text>
-        <text x="726" y="236" textAnchor="middle" fontSize="7.5" fill={C.secure} fontFamily="monospace">Secure</text>
-        <text x="726" y="246" textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Endpoint</text>
+        <text x={SECURE.cx} y={SECURE.cy - 6} textAnchor="middle" fontSize="15" fill={C.secure}>🔒</text>
+        <text x={SECURE.cx} y={SECURE.cy + 8} textAnchor="middle" fontSize="7.5" fill={C.secure} fontFamily="monospace">Secure</text>
+        <text x={SECURE.cx} y={SECURE.cy + 18} textAnchor="middle" fontSize="7" fill="#8a8a8a" fontFamily="monospace">Endpoint</text>
 
-        {/* ── Field listing inside nodes ──────────────────────────────── */}
-        {/* AI-safe fields floating near Gemini */}
-        {aiSafeFields.slice(0, 4).map((f, i) => (
+        {/* AI-safe fields — below Gemini, centered in boundary */}
+        {visibleFields.map((f, i) => {
+          const col = fieldCols === 2 ? i % 2 : 0;
+          const row = fieldCols === 2 ? Math.floor(i / 2) : i;
+          const fx =
+            fieldCols === 2
+              ? GEMINI.cx + (col === 0 ? -fieldColGap / 2 : fieldColGap / 2)
+              : GEMINI.cx;
+          const fy = fieldStartY + row * fieldLineH;
+          if (fy > boundaryBottom - 8) return null;
+          return (
+            <text
+              key={f}
+              x={fx}
+              y={fy}
+              textAnchor="middle"
+              fontSize="6.5"
+              fill={C.aiSafe}
+              fontFamily="monospace"
+              opacity="0.75"
+            >
+              ● {f}
+            </text>
+          );
+        })}
+        {aiSafeFields.length > 8 && (
           <text
-            key={f}
-            x="374"
-            y={188 + i * 12}
+            x={GEMINI.cx}
+            y={boundaryBottom - 6}
             textAnchor="middle"
-            fontSize="7"
+            fontSize="6"
             fill={C.aiSafe}
             fontFamily="monospace"
-            opacity="0.6"
+            opacity="0.5"
           >
-            ● {f}
+            +{aiSafeFields.length - 8} more
           </text>
-        ))}
+        )}
 
         {/* ── Legend ─────────────────────────────────────────────────── */}
-        <rect x="12" y="266" width="264" height="22" rx="4" fill="rgba(0,0,0,0.6)" stroke="#1f1f1f" strokeWidth="0.5" />
-        <circle cx="26" cy="277" r="4" fill={C.aiSafe} style={{ filter: `drop-shadow(0 0 3px ${C.aiSafe})` }} />
-        <text x="34" y="281" fontSize="8" fill="#9a9a9a" fontFamily="monospace">Through AI (safe)</text>
-        <circle cx="150" cy="277" r="4" fill={C.encrypted} style={{ filter: `drop-shadow(0 0 3px ${C.encrypted})` }} />
-        <text x="158" y="281" fontSize="8" fill="#9a9a9a" fontFamily="monospace">Encrypted bypass</text>
+        <rect x="12" y="291" width="264" height="22" rx="4" fill="rgba(0,0,0,0.6)" stroke="#1f1f1f" strokeWidth="0.5" />
+        <circle cx="26" cy="302" r="4" fill={C.aiSafe} style={{ filter: `drop-shadow(0 0 3px ${C.aiSafe})` }} />
+        <text x="34" y="306" fontSize="8" fill="#9a9a9a" fontFamily="monospace">Through AI (safe)</text>
+        <circle cx="150" cy="302" r="4" fill={C.encrypted} style={{ filter: `drop-shadow(0 0 3px ${C.encrypted})` }} />
+        <text x="158" y="306" fontSize="8" fill="#9a9a9a" fontFamily="monospace">Encrypted bypass</text>
       </svg>
     </div>
   );
